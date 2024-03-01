@@ -1,0 +1,56 @@
+\documentclass[sigconf, nonacm]{acmart}
+
+\begin{document}
+\title{Efficient Shapelet Computation for Silhouette Score}
+
+\author{Adam Charane}
+\affiliation{%
+	\institution{Free University of Bozen-Bolzano}
+	\city{Bolzano}
+	\state{Italy}
+}
+\email{acharane@unibz.it}
+
+\author{Matteo Ceccarello}
+\affiliation{%
+	\institution{University of Padova}
+	\city{Padova}
+	\state{Italy}
+}
+\email{matteo.ceccarello@dei.unipd.it}
+
+\author{Johann Gamper}
+\affiliation{%
+	\institution{Free University of Bozen-Bolzano}
+	\city{Bolzano}
+	\state{Italy}
+}
+\email{johann.gamper@unibz.it}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+	Praesent imperdiet, lacus nec varius placerat, est ex eleifend justo, a vulputate leo massa consectetur nunc. Donec posuere in mi ut tempus. Pellentesque sem odio, faucibus non mi in, laoreet maximus arcu. In hac habitasse platea dictumst. Nunc euismod neque eu urna accumsan, vitae vehicula metus tincidunt. Maecenas congue tortor nec varius pellentesque. Pellentesque bibendum libero ac dignissim euismod. Aliquam justo ante, pretium vel mollis sed, consectetur accumsan nibh. Nulla sit amet sollicitudin est. Etiam ullamcorper diam a sapien lacinia faucibus.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+\section{Related Work}
+NN-Descent~\cite{NN-Descent} is based on the principle: \textit{A neighbor of
+a neighbor is likely to be a neighbor}. The idea is, given an approximation of 
+the nearest neighbor, then the approximation can be improved by exploring the 
+neighbors of the neighbors of each point. To improve the running time, the 
+authors use local join to avoid comparing same points many times in the same 
+iteration. They also use incremental search to avoid comparing points that have
+been compared in previous iterations. Also, sampled is used to lower the 
+overhead of local joins. Finally, random projection trees are used to 
+initialize the graph.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{bibliography}
+
+\end{document}
+\endinput
