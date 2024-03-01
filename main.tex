@@ -40,14 +40,14 @@
 
 \section{Related Work}
 NN-Descent~\cite{NN-Descent} is based on the principle: \textit{A neighbor of
-a neighbor is likely to be a neighbor}. The idea is, given an approximation of 
-the nearest neighbor, then the approximation can be improved by exploring the 
-neighbors of the neighbors of each point. To improve the running time, the 
-authors use local join to avoid comparing same points many times in the same 
-iteration. They also use incremental search to avoid comparing points that have
-been compared in previous iterations. Also, sampled is used to lower the 
-overhead of local joins. Finally, random projection trees are used to 
-initialize the graph.
+a neighbor is likely to be a neighbor}. The idea is, given an approximation 
+graph of the nearest neighbor, then the approximation can be improved, 
+in an iterative fashion, by exploring the neighbors of the neighbors of each 
+point. To improve the running time, the authors use local join to avoid 
+comparing same points many times in the same iteration. They also use 
+incremental search to avoid comparing points that have been compared in 
+previous iterations. Also, sampled is used to lower the overhead of local 
+joins. Finally, random projection trees are used to initialize the graph.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliography}
