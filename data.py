@@ -78,7 +78,7 @@ class Data:
                     best_sum = cur_sum
                     best_lbl = label
             cluster_labels["dominant label"] = best_lbl
-            cluster_labels["%"] = 100*best_sum/tot_sum
+            cluster_labels["%"] = 100 * best_sum / tot_sum
             res[cid] = cluster_labels
         df = pd.DataFrame.from_dict(res).T.sort_values("%", ascending=False)
         df.fillna(0, inplace=True)
