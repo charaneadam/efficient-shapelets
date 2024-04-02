@@ -28,9 +28,10 @@ class Data:
         self.window_size = None
         self.clusters = None
         self.windows_distances = None
+        self.cluster_distances = None
 
     def get_sliding_windows(self, window_length=25, normalize=True):
-        if self.window_size != window_length or not self.windows:
+        if self.window_size is None or self.window_size != window_length:
             self.window_size = window_length
             self.windows = sliding_window_view(
                 self.X_train, window_shape=window_length, axis=1
@@ -53,18 +54,36 @@ class Data:
             a = self.windows_distances[clusters, :][:, clusters].mean()
             b = self.windows_distances[clusters, :][:, other_clusters].mean()
             silhouette = (b - a) / max(a, b)
-            cluster_labels = {"S": silhouette}
+            cluster_labels = {"Silhouette": silhouette}
             seen = set()
+            labels = set()
             for c in clusters:
                 ts_id = c // number_of_windows_per_ts
                 window_label = self.y_train[ts_id]
-                cluster_labels[window_label] = cluster_labels.get(window_label, 0) + 1
+                label_str = f"label {window_label}"
+                labels.add(window_label)
+                cluster_labels[label_str] = cluster_labels.get(label_str, 0) + 1
                 if ts_id not in seen:
-                    cluster_labels[f"c{window_label}"] = (
-                        cluster_labels.get(f"c{window_label}", 0) + 1
-                    )
+                    uniq_lbl = f"# ts from {window_label}"
+                    cluster_labels[uniq_lbl] = cluster_labels.get(uniq_lbl, 0) + 1
                     seen.add(ts_id)
+            tot_sum = 0
+            cur_sum = 0
+            best_sum = 0
+            best_lbl = None
+            for label in labels:
+                cur_sum = cluster_labels[f"label {label}"]
+                tot_sum += cur_sum
+                if best_sum < cur_sum:
+                    best_sum = cur_sum
+                    best_lbl = label
+            cluster_labels["dominant label"] = best_lbl
+            cluster_labels["%"] = 100*best_sum/tot_sum
             res[cid] = cluster_labels
-        return pd.DataFrame.from_dict(res).T.sort_values(
-            "S", ascending=False
-        )
+        df = pd.DataFrame.from_dict(res).T.sort_values("%", ascending=False)
+        df.fillna(0, inplace=True)
+        for col in df.columns:
+            if col == "Silhouette" or col == "%":
+                continue
+            df[col] = df[col].astype(np.int16)
+        return df
