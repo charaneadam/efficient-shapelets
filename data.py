@@ -4,8 +4,6 @@ from aeon.datasets import load_from_tsfile
 import numpy as np
 import pandas as pd
 
-from scipy.spatial.distance import pdist, squareform
-
 
 def get_dataset(dataset_name, train, path) -> tuple[np.ndarray, np.ndarray]:
     split = "TRAIN" if train else "TEST"
@@ -95,14 +93,9 @@ class Data_info:
     def get_clusters_stats(self):
         cluster_ids = np.unique(self.data.clusters)
         res = {}
-
         for cluster_id in cluster_ids:
             same_cluster = np.where(self.data.clusters == cluster_id)[0]
-
             cluster_info, windows_classes = self._cluster_info(same_cluster)
-
             self._add_dominant_class_info(windows_classes, cluster_info)
-
             res[cluster_id] = cluster_info
-
         return self._info_to_df(res)
