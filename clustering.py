@@ -16,6 +16,9 @@ class Cluster:
         self.centroids_dists = pdist(self.algorithm.cluster_centers_)
         self.centroids_dists = squareform(self.centroids_dists)
 
+    def set_clusters_labels(self, labels):
+        self.centroids_labels = labels
+
     def get_elements_labels(self):
         return self.algorithm.labels_
 

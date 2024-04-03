@@ -12,6 +12,11 @@ class Experiment:
 
     def run(self):
         self.algorithm.run(self.data.get_sliding_windows())
-        self.data.assign_clusters_to_windows(self.algorithm.get_elements_labels())
 
-        return self.data_info.get_clusters_stats()
+        windows_clusters = self.algorithm.get_elements_labels()
+        self.data.assign_clusters_to_windows(windows_clusters)
+
+        clusters_labels = self.data_info.get_clusters_labels()
+        self.algorithm.set_clusters_labels(clusters_labels)
+
+        return self.data_info.get_info_df()
