@@ -25,17 +25,25 @@ class Cluster:
 
 
 class ClusterInfo:
-    def __init__(self, data) -> None:
+    def __init__(self, data, algorithm) -> None:
         self.data: Data = data
         self.info_df: pd.DataFrame = None
         self.clusters: np.ndarray
         self.centroids_labels: np.ndarray
+        self.algorithm: Cluster = algorithm
 
-    def assign_clusters_to_windows(self, clusters):
-        self.clusters = clusters
+    def init(self):
+        self.algorithm.run(self.data.get_sliding_windows())
+        windows_clusters = self.algorithm.assigned_clusters()
+        self.clusters = windows_clusters
+        self.set_clusters_labels()
 
-    def set_clusters_labels(self, labels):
-        self.centroids_labels = labels
+
+    def set_clusters_labels(self):
+        if self.info_df is None:
+            self._generate_clusters_info()
+        res = list(zip(self.info_df.window_id, self.info_df["dominant label"])) 
+        self.centroids_labels = np.array(sorted(res))[:, 1]
 
     def _cluster_info(self, same_cluster):
         ts_length = self.data.x_train.shape[1]
@@ -94,12 +102,6 @@ class ClusterInfo:
             self._add_dominant_class_info(windows_classes, cluster_info)
             res[cluster_id] = cluster_info
         self._info_to_df(res)
-
-    def get_clusters_labels(self):
-        if self.info_df is None:
-            self._generate_clusters_info()
-        res = list(zip(self.info_df.window_id, self.info_df["dominant label"]))
-        return np.array(sorted(res))[:, 1]
 
     def get_info_df(self):
         if self.info_df is None:
