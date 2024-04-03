@@ -11,17 +11,13 @@ class Cluster:
         self.algorithm = KMeans(n_clusters=self.n_centroids, random_state=0)
         self.distances: np.ndarray
         self.centroids_dists: np.ndarray
-        self.centroids_labels: np.ndarray
 
     def run(self, data):
         self.distances = self.algorithm.fit_transform(data)
         self.centroids_dists = pdist(self.algorithm.cluster_centers_)
         self.centroids_dists = squareform(self.centroids_dists)
 
-    def set_clusters_labels(self, labels):
-        self.centroids_labels = labels
-
-    def get_elements_labels(self):
+    def assigned_clusters(self):
         return self.algorithm.labels_
 
     def get_distances_to_centroids(self):
@@ -33,9 +29,13 @@ class ClusterInfo:
         self.data: Data = data
         self.info_df: pd.DataFrame = None
         self.clusters: np.ndarray
+        self.centroids_labels: np.ndarray
 
     def assign_clusters_to_windows(self, clusters):
         self.clusters = clusters
+
+    def set_clusters_labels(self, labels):
+        self.centroids_labels = labels
 
     def _cluster_info(self, same_cluster):
         ts_length = self.data.x_train.shape[1]

@@ -8,15 +8,15 @@ class Experiment:
         self.n_clusters = n_clusters
         self.data = Data(dataset_name)
         self.algorithm = Cluster(n_clusters)
-        self.data_info = ClusterInfo(self.data)
+        self.cluster_info = ClusterInfo(self.data)
 
     def run(self):
         self.algorithm.run(self.data.get_sliding_windows())
 
-        windows_clusters = self.algorithm.get_elements_labels()
-        self.data_info.assign_clusters_to_windows(windows_clusters)
+        windows_clusters = self.algorithm.assigned_clusters()
+        self.cluster_info.assign_clusters_to_windows(windows_clusters)
 
-        clusters_labels = self.data_info.get_clusters_labels()
-        self.algorithm.set_clusters_labels(clusters_labels)
+        clusters_labels = self.cluster_info.get_clusters_labels()
+        self.cluster_info.set_clusters_labels(clusters_labels)
 
-        return self.data_info.get_info_df()
+        return self.cluster_info.get_info_df()
