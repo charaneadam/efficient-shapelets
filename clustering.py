@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
@@ -5,10 +6,23 @@ from sklearn.cluster import KMeans
 from data import Data
 
 
-class Cluster:
-    def __init__(self, n_centroids: int) -> None:
-        self.n_centroids: int = n_centroids
-        self.algorithm = KMeans(n_clusters=self.n_centroids, random_state=0)
+class ClusterAlgorithm(ABC):
+    @abstractmethod
+    def run(self, data):
+        raise NotImplementedError("Run your algorithm and save info needed")
+
+    @abstractmethod
+    def assigned_clusters(self):
+        raise NotImplementedError("Return clusters assigned to windows")
+
+    @abstractmethod
+    def get_distances_to_references(self):
+        raise NotImplementedError("Distance of windows to cluster reference")
+
+
+class Kmeans(ClusterAlgorithm):
+    def __init__(self, n_centroids: int, random_state=0) -> None:
+        self.algorithm = KMeans(n_clusters=n_centroids, random_state=random_state)
         self.distances: np.ndarray
         self.centroids_dists: np.ndarray
 
@@ -20,7 +34,7 @@ class Cluster:
     def assigned_clusters(self):
         return self.algorithm.labels_
 
-    def get_distances_to_centroids(self):
+    def get_distances_to_references(self):
         return self.distances
 
 
@@ -30,7 +44,7 @@ class ClusterInfo:
         self.info_df: pd.DataFrame = None
         self.clusters: np.ndarray
         self.centroids_labels: np.ndarray
-        self.algorithm: Cluster = algorithm
+        self.algorithm: ClusterAlgorithm = algorithm
 
     def init(self):
         self.algorithm.run(self.data.get_sliding_windows())
@@ -38,11 +52,10 @@ class ClusterInfo:
         self.clusters = windows_clusters
         self.set_clusters_labels()
 
-
     def set_clusters_labels(self):
         if self.info_df is None:
             self._generate_clusters_info()
-        res = list(zip(self.info_df.window_id, self.info_df["dominant label"])) 
+        res = list(zip(self.info_df.window_id, self.info_df["dominant label"]))
         self.centroids_labels = np.array(sorted(res))[:, 1]
 
     def _cluster_info(self, same_cluster):
