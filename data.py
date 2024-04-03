@@ -42,6 +42,7 @@ class Data:
 class Data_info:
     def __init__(self, data) -> None:
         self.data: Data = data
+        self.info_df: pd.DataFrame = None
 
     def _cluster_info(self, same_cluster):
         ts_length = self.data.x_train.shape[1]
@@ -88,9 +89,9 @@ class Data_info:
             if col in {"Silhouette", "%"}:
                 continue
             df[col] = df[col].astype(np.int16)
-        return df
+        self.info_df = df
 
-    def get_clusters_stats(self):
+    def _generate_clusters_info(self):
         cluster_ids = np.unique(self.data.clusters)
         res = {}
         for cluster_id in cluster_ids:
@@ -98,4 +99,15 @@ class Data_info:
             cluster_info, windows_classes = self._cluster_info(same_cluster)
             self._add_dominant_class_info(windows_classes, cluster_info)
             res[cluster_id] = cluster_info
-        return self._info_to_df(res)
+        self._info_to_df(res)
+
+    def get_clusters_labels(self):
+        if self.info_df is None:
+            self._generate_clusters_info()
+        res = list(zip(self.info_df.index, self.info_df["dominant label"]))
+        return np.array(sorted(res))[:, 1]
+
+    def get_info_df(self):
+        if self.info_df is None:
+            self._generate_clusters_info()
+        return self.info_df
