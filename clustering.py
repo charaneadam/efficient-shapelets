@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans
 class Cluster:
     def __init__(self, n_centroids: int) -> None:
         self.n_centroids: int = n_centroids
-        self.algorithm = KMeans(n_clusters=self.n_centroids)
+        self.algorithm = KMeans(n_clusters=self.n_centroids, random_state=0)
         self.distances: np.ndarray
         self.centroids_dists: np.ndarray
         self.centroids_labels: np.ndarray
