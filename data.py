@@ -35,14 +35,15 @@ class Data:
                 self.windows = StandardScaler().fit_transform(self.windows.T).T
         return self.windows
 
-    def assign_clusters_to_windows(self, clusters):
-        self.clusters = clusters
-
 
 class Data_info:
     def __init__(self, data) -> None:
         self.data: Data = data
         self.info_df: pd.DataFrame = None
+        self.clusters: np.ndarray
+
+    def assign_clusters_to_windows(self, clusters):
+        self.clusters = clusters
 
     def _cluster_info(self, same_cluster):
         ts_length = self.data.x_train.shape[1]
@@ -92,10 +93,10 @@ class Data_info:
         self.info_df = df
 
     def _generate_clusters_info(self):
-        cluster_ids = np.unique(self.data.clusters)
+        cluster_ids = np.unique(self.clusters)
         res = {}
         for cluster_id in cluster_ids:
-            same_cluster = np.where(self.data.clusters == cluster_id)[0]
+            same_cluster = np.where(self.clusters == cluster_id)[0]
             cluster_info, windows_classes = self._cluster_info(same_cluster)
             self._add_dominant_class_info(windows_classes, cluster_info)
             res[cluster_id] = cluster_info

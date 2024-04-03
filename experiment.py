@@ -14,7 +14,7 @@ class Experiment:
         self.algorithm.run(self.data.get_sliding_windows())
 
         windows_clusters = self.algorithm.get_elements_labels()
-        self.data.assign_clusters_to_windows(windows_clusters)
+        self.data_info.assign_clusters_to_windows(windows_clusters)
 
         clusters_labels = self.data_info.get_clusters_labels()
         self.algorithm.set_clusters_labels(clusters_labels)
