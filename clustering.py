@@ -1,14 +1,20 @@
+import numpy as np
+from scipy.spatial.distance import pdist, squareform
 from sklearn.cluster import KMeans
 
 
 class Cluster:
-    def __init__(self, n_centroids) -> None:
-        self.n_centroids = n_centroids
+    def __init__(self, n_centroids: int) -> None:
+        self.n_centroids: int = n_centroids
         self.algorithm = KMeans(n_clusters=self.n_centroids)
-        self.distances = None
+        self.distances: np.ndarray
+        self.centroids_dists: np.ndarray
+        self.centroids_labels: np.ndarray
 
     def run(self, data):
         self.distances = self.algorithm.fit_transform(data)
+        self.centroids_dists = pdist(self.algorithm.cluster_centers_)
+        self.centroids_dists = squareform(self.centroids_dists)
 
     def get_elements_labels(self):
         return self.algorithm.labels_
