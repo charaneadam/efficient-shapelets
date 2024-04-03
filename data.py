@@ -7,9 +7,9 @@ import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 
 
-def get_dataset(dataset_name, train, data_path):
+def get_dataset(dataset_name, train, path) -> tuple[np.ndarray, np.ndarray]:
     split = "TRAIN" if train else "TEST"
-    filepath = f"{data_path}/{dataset_name}/{dataset_name}_{split}.ts"
+    filepath = f"{path}/{dataset_name}/{dataset_name}_{split}.ts"
     x, y = load_from_tsfile(filepath)
     n_ts, _, ts_length = x.shape
     x = x.reshape((n_ts, ts_length))
@@ -18,41 +18,43 @@ def get_dataset(dataset_name, train, data_path):
 
 
 class Data:
-    def __init__(self, dataset_name, data_path="data"):
-        self.X_train, self.y_train = get_dataset(
-            dataset_name, train=True, data_path=data_path
-        )
-        self.n_ts = self.X_train.shape[0]
-        self.ts_length = self.X_train.shape[1]
+    def __init__(self, dataset_name, path="data"):
+        x, y = get_dataset(dataset_name=dataset_name, train=True, path=path)
+        self.x_train: np.ndarray = x
+        self.y_train: np.ndarray = y
+        self.n_ts = self.x_train.shape[0]
         self.windows = None
-        self.window_size = None
-        self.clusters = None
-        self.windows_dists = None
-        self.cluster_dists = None
+        self.window_size: int = 0
+        self.clusters: np.ndarray
 
     def get_sliding_windows(self, window_length=25, normalize=True):
-        if self.window_size is None or self.window_size != window_length:
+        if self.window_size != window_length:
             self.window_size = window_length
             self.windows = sliding_window_view(
-                self.X_train, window_shape=window_length, axis=1
+                self.x_train, window_shape=window_length, axis=1
             ).reshape(-1, window_length)
             if normalize:
                 self.windows = StandardScaler().fit_transform(self.windows.T).T
-            self.windows_dists = squareform(pdist(self.windows))
         return self.windows
 
     def assign_clusters_to_windows(self, clusters):
         self.clusters = clusters
 
+
+class Data_info:
+    def __init__(self, data) -> None:
+        self.data: Data = data
+
     def _cluster_info(self, same_cluster):
-        number_of_windows_per_ts = self.ts_length - self.window_size + 1
+        ts_length = self.data.x_train.shape[1]
+        number_of_windows_per_ts = ts_length - self.data.window_size + 1
         unique_ts = set()  # Time series covered
         windows_classes = set()  # Classes of the TS that windows belongs to
-        cluster_info = dict()
+        cluster_info = {}
         for window_id in same_cluster:
             ts_id = window_id // number_of_windows_per_ts
             # window has same class label as the TS containing it
-            window_class_label = self.y_train[ts_id]
+            window_class_label = self.data.y_train[ts_id]
             # name of the column in Pandas
             label_str = f"label {window_class_label}"
             # keep track of classes in the current cluster
@@ -91,11 +93,11 @@ class Data:
         return df
 
     def get_clusters_stats(self):
-        cluster_ids = np.unique(self.clusters)
-        res = dict()
+        cluster_ids = np.unique(self.data.clusters)
+        res = {}
 
         for cluster_id in cluster_ids:
-            same_cluster = np.where(self.clusters == cluster_id)[0]
+            same_cluster = np.where(self.data.clusters == cluster_id)[0]
 
             cluster_info, windows_classes = self._cluster_info(same_cluster)
 
