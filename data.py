@@ -90,6 +90,7 @@ class Data_info:
             if col in {"Silhouette", "%"}:
                 continue
             df[col] = df[col].astype(np.int16)
+        df.reset_index(inplace=True, names='window_id')
         self.info_df = df
 
     def _generate_clusters_info(self):
@@ -105,7 +106,7 @@ class Data_info:
     def get_clusters_labels(self):
         if self.info_df is None:
             self._generate_clusters_info()
-        res = list(zip(self.info_df.index, self.info_df["dominant label"]))
+        res = list(zip(self.info_df.window_id, self.info_df["dominant label"]))
         return np.array(sorted(res))[:, 1]
 
     def get_info_df(self):
