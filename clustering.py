@@ -100,14 +100,9 @@ class ClustersInfo:
         self.clusters: np.ndarray
         self.centroids_labels: np.ndarray
         self.algorithm: ClusterAlgorithm = algorithm
+        self._init()
 
-    def init(self):
-        self.algorithm.run(self.data.get_sliding_windows())
-        windows_clusters = self.algorithm.assigned_clusters()
-        self.clusters = windows_clusters
-        self.set_clusters_labels()
-
-    def set_clusters_labels(self):
+    def _set_clusters_labels(self):
         if self.info_df is None:
             self._generate_clusters_info()
         res = list(zip(self.info_df.window_id, self.info_df["dominant label"]))
@@ -132,7 +127,12 @@ class ClustersInfo:
             res[cluster_id] = cluster_info.info
         self._info_to_df(res)
 
+    def _init(self):
+        self.algorithm.run(self.data.get_sliding_windows())
+        windows_clusters = self.algorithm.assigned_clusters()
+        self.clusters = windows_clusters
+        self._set_clusters_labels()
+        self._generate_clusters_info()
+
     def get_info_df(self):
-        if self.info_df is None:
-            self._generate_clusters_info()
         return self.info_df

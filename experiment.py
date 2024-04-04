@@ -10,5 +10,4 @@ class Experiment:
         self.cluster_info = ClustersInfo(self.data, Kmeans(n_clusters))
 
     def run(self):
-        self.cluster_info.init()
         return self.cluster_info.get_info_df()
