@@ -1,12 +1,22 @@
 from data import Data
-from clustering.info import ClustersInfo
-from clustering.algorithms import Kmeans
+from clustering import LIST_OF_ALGORITHMS, ClustersInfo
 
 
 class Experiment:
-    def __init__(self, dataset_name, window_size, n_clusters):
-        self.data = Data(dataset_name, window_size)
-        self.cluster_info = ClustersInfo(self.data, Kmeans(n_clusters))
+    def __init__(self, metadata):
+
+        self.description = metadata["description"]
+
+        data = Data(**metadata["data"])
+
+        algorithm_name = next(iter(metadata["algorithm"].keys()))
+        algorithm_params = metadata["algorithm"][algorithm_name]
+        algorithm = LIST_OF_ALGORITHMS[algorithm_name](**algorithm_params)
+
+        self.cluster_info = ClustersInfo(data, algorithm)
 
     def run(self):
         return self.cluster_info.get_info_df()
+
+    def __repr__(self) -> str:
+        return self.description
