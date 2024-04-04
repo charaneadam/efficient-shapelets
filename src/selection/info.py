@@ -11,7 +11,7 @@ class ClusterInfo:
         self.w_indices = windows_indices
 
         self.cluster_size: int = len(self.w_indices)
-        self.popular_label: int
+        self.label: int
         self.popularity: float
         self.ts_covered: set
 
@@ -21,7 +21,7 @@ class ClusterInfo:
         labels, covered = data.windows_labels_and_covered_ts(self.w_indices)
         labels, counts = np.unique(labels, return_counts=True)
         count, label = max(zip(counts, labels))
-        self.popular_label = label
+        self.label = label
         self.popularity = count / self.cluster_size
         self.ts_covered = covered[label]
 
@@ -29,10 +29,10 @@ class ClusterInfo:
         return [
             self.cluster_id,
             self.cluster_size,
-            self.popular_label,
+            self.label,
             self.popularity * 100,
             len(self.ts_covered),
-            sum(data.y_train == self.popular_label),
+            sum(data.y_train == self.label),
         ]
 
 
@@ -75,14 +75,14 @@ class ClustersInfo:
     def get_clusters_of_labels(self, label, top=3):
         return self.info_df[self.info_df.label == label].id.values[:top]
 
-    def get_best_windows_to_cluster(self, cluster_id, top=3):
+    def best_windows_to_cluster(self, cluster_id, top=3):
         indices = self.clusters_info[cluster_id].w_indices
         label = self.clusters_info[cluster_id].label
         dists = self.algorithm.windows_dists_to_cluster(indices, cluster_id)
-        sorted_dists = np.array(sorted(list(zip(dists, indices))))
+        sorted_dists = np.array(sorted(list(zip(dists, indices))))[:, 1]
         selected_windows = []
         count = 0
-        for _, index in sorted_dists:
+        for index in sorted_dists.astype(int):
             if self.data.get_window_label(index) == label:
                 count += 1
                 selected_windows.append(index)
