@@ -13,13 +13,23 @@ class ClusterInfo:
 
         self._set_popularity(data, window_indices)
 
-    def _set_popularity(self, data, window_indices):
-        windows_labels, ts_covered = data.windows_labels_and_covered_ts(window_indices)
-        labels, counts = np.unique(windows_labels, return_counts=True)
+    def _set_popularity(self, data, windows_indices):
+        labels, covered = data.windows_labels_and_covered_ts(windows_indices)
+        labels, counts = np.unique(labels, return_counts=True)
         count, label = max(zip(counts, labels))
         self.popular_label = label
         self.popularity = count / self.cluster_size
-        self.ts_covered = ts_covered[label]
+        self.ts_covered = covered[label]
+
+    def get_info_for_dataframe(self, data):
+        return [
+            self.cluster_id,
+            self.cluster_size,
+            self.popular_label,
+            self.popularity * 100,
+            len(self.ts_covered),
+            sum(data.y_train == self.popular_label),
+        ]
 
 
 class ClustersInfo:
@@ -46,20 +56,11 @@ class ClustersInfo:
     def _generate_info_dataframe(self):
         result = []
         for cinfo in self.clusters_info:
-            result.append(
-                [
-                    cinfo.cluster_id,
-                    cinfo.cluster_size,
-                    cinfo.popular_label,
-                    cinfo.popularity * 100,
-                    len(cinfo.ts_covered),
-                    sum(self.data.y_train == cinfo.popular_label)
-                ]
-            )
+            result.append(cinfo.get_info_for_dataframe(self.data))
 
-        col_names = ["id", "size", "label", "% popularity", "# covered TS", "# of TS"]
-        df = pd.DataFrame(result, columns=col_names)
-        self.info_df = df.sort_values(by="% popularity", ascending=False)
+        cols = ["id", "size", "label", "popularity", "covered", "total"]
+        df = pd.DataFrame(result, columns=cols)
+        self.info_df = df.sort_values(by="popularity", ascending=False)
 
     def info(self):
         return self.info_df
