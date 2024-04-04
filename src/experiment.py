@@ -1,5 +1,6 @@
 from data import Data
-from clustering import Kmeans, ClustersInfo
+from clustering.info import ClustersInfo
+from clustering.algorithms import Kmeans
 
 
 class Experiment:

@@ -15,7 +15,7 @@ def get_dataset(dataset_name, train, path) -> tuple[np.ndarray, np.ndarray]:
 
 
 class Data:
-    def __init__(self, dataset_name, path="data"):
+    def __init__(self, dataset_name, path="../data"):
         x, y = get_dataset(dataset_name=dataset_name, train=True, path=path)
         self.x_train: np.ndarray = x
         self.y_train: np.ndarray = y
