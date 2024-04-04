@@ -1,5 +1,5 @@
 from data import Data
-from clustering import Kmeans, ClusterInfo
+from clustering import Kmeans, ClustersInfo
 
 
 class Experiment:
@@ -7,7 +7,7 @@ class Experiment:
         self.dataset = dataset_name
         self.n_clusters = n_clusters
         self.data = Data(dataset_name)
-        self.cluster_info = ClusterInfo(self.data, Kmeans(n_clusters))
+        self.cluster_info = ClustersInfo(self.data, Kmeans(n_clusters))
 
     def run(self):
         self.cluster_info.init()
