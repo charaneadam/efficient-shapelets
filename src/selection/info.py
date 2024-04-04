@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from src.data import Data
-from src.selection.algorithms import ClusterAlgorithm
+from data import Data
+from .algorithms import ClusterAlgorithm
 
 
 class ClusterInfo:
