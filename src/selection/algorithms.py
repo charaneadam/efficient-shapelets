@@ -17,10 +17,16 @@ class ClusterAlgorithm(ABC):
     def get_distances_to_references(self):
         raise NotImplementedError("Distance of windows to cluster reference")
 
+    @abstractmethod
+    def distances_between_clusters(self):
+        raise NotImplementedError("Distance between clusters")
+
 
 class Kmeans(ClusterAlgorithm):
     def __init__(self, n_centroids: int, random_state=0) -> None:
-        self.algorithm = KMeans(n_clusters=n_centroids, random_state=random_state)
+        self.algorithm = KMeans(
+            n_clusters=n_centroids, random_state=random_state, n_init="auto"
+        )
         self.distances: np.ndarray
         self.centroids_dists: np.ndarray
 
@@ -34,3 +40,6 @@ class Kmeans(ClusterAlgorithm):
 
     def get_distances_to_references(self):
         return self.distances
+
+    def distances_between_clusters(self):
+        return self.centroids_dists
