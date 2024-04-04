@@ -21,6 +21,9 @@ class ClusterAlgorithm(ABC):
     def distances_between_clusters(self):
         raise NotImplementedError("Distance between clusters")
 
+    @abstractmethod
+    def windows_dists_to_cluster(self, windows_indices, cluster_id):
+        raise NotImplemented("Returns distances of windows to the cluster")
 
 class Kmeans(ClusterAlgorithm):
     def __init__(self, n_centroids: int, random_state=0) -> None:
@@ -43,3 +46,6 @@ class Kmeans(ClusterAlgorithm):
 
     def distances_between_clusters(self):
         return self.centroids_dists
+
+    def get_windows_dists_to_cluster(self, windows_indices, cluster_id):
+        return self.distances[:, cluster_id][windows_indices]
