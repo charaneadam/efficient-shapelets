@@ -13,13 +13,6 @@ class ClusterBased(SelectionMethod):
         self.info: ClustersInfo = info
 
     def select(self):
-        """
-        - Get class labels
-        - For each label:
-            - Get clusters of that label (sorted by popularity)
-            - From each cluster select 3 windows with the same label
-            - Return the windows
-        """
         class_labels = self.info.get_class_labels()
         windows = []
         for label in class_labels:
