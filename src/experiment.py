@@ -8,7 +8,7 @@ class Experiment:
         self.selection_method = ClustersInfo(data, algorithm)
 
     def run(self):
-        return self.selection_method.get_info_df()
+        return self.selection_method.info()
 
     def __repr__(self) -> str:
         return self.description
