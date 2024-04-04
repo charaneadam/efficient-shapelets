@@ -52,11 +52,12 @@ class ClustersInfo:
                     cinfo.cluster_size,
                     cinfo.popular_label,
                     cinfo.popularity * 100,
-                    len(cinfo.ts_covered)
+                    len(cinfo.ts_covered),
+                    sum(self.data.y_train == cinfo.popular_label)
                 ]
             )
 
-        col_names = ["id", "size", "label", "% popularity", "# covered TS"]
+        col_names = ["id", "size", "label", "% popularity", "# covered TS", "# of TS"]
         df = pd.DataFrame(result, columns=col_names)
         self.info_df = df.sort_values(by="% popularity", ascending=False)
 
