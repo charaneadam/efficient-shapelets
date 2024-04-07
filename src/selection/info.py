@@ -6,6 +6,26 @@ from .algorithms import ClusterAlgorithm
 
 
 class ClusterInfo:
+    """
+    A class used to store information about a specific cluster.
+    ...
+    Attributes
+    ----------
+    cluster_id: int
+        The unique identifier of this cluster
+    w_indices: ndarray(dtype=int, ndim=1)
+        The indices of of the windows assigned to this cluster
+    cluster_size: int
+        the number of points assigned to this cluster
+    label: int
+        The label assigned to this cluster based on the windows 
+        contained in the cluster
+    popularity: float
+        The fraction of the windows representing the majority class (label)
+    ts_covered: set
+        Set of time series of class label, where subsequences have 
+        been assigned to this cluster
+    """
     def __init__(self, cluster_id, data, windows_indices) -> None:
         self.cluster_id: int = cluster_id
         self.w_indices = windows_indices
@@ -37,6 +57,22 @@ class ClusterInfo:
 
 
 class ClustersInfo:
+    """
+    A class that contains information about the result of clustering. It is
+    to be used in order to select shapelets.
+    ...
+    Attributes
+    ----------
+    data: Data
+        An instance of Data for a specific dataset.
+    algorithm:
+        A clustering algorithm to be used in order to cluster the candidates
+    clusters_info: dict
+        A dictionary where the keys are the unique identifiers of clusters
+        and the values are instances of ClusterInfo
+    cluster_info: DataFrame
+        A DataFrame containing information about the clusters
+    """
     def __init__(self, data, algorithm) -> None:
         self.data: Data = data
         self.algorithm: ClusterAlgorithm = algorithm

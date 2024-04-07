@@ -5,6 +5,16 @@ from sklearn.cluster import KMeans
 
 
 class ClusterAlgorithm(ABC):
+    """
+    An abstract class to be used as a base case for clustering algorithms.
+    Concrete classes have to implement:
+    - run: A method to run the clustering and store all necessary data
+    - assigned_clusters: Returns the points assigned to each cluster.
+    - distances_between_clusters: Returns distances between clusters
+    - windows_dists_to_cluster: return distances between a list of windows
+    and a cluster
+    """
+
     @abstractmethod
     def run(self, data):
         raise NotImplementedError("Run your algorithm and save info needed")
@@ -14,16 +24,13 @@ class ClusterAlgorithm(ABC):
         raise NotImplementedError("Return clusters assigned to windows")
 
     @abstractmethod
-    def get_distances_to_references(self):
-        raise NotImplementedError("Distance of windows to cluster reference")
-
-    @abstractmethod
     def distances_between_clusters(self):
         raise NotImplementedError("Distance between clusters")
 
     @abstractmethod
     def windows_dists_to_cluster(self, windows_indices, cluster_id):
         raise NotImplementedError("Returns distances of windows to the cluster")
+
 
 class Kmeans(ClusterAlgorithm):
     def __init__(self, n_centroids: int, random_state=0) -> None:

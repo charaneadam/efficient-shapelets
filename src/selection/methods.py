@@ -3,6 +3,10 @@ from .info import ClustersInfo
 
 
 class SelectionMethod(ABC):
+    """
+    An abstract class that contains one method (select) that
+    that returns selected shapelets.
+    """
     @abstractmethod
     def select(self):
         raise NotImplemented("Implement selection method")

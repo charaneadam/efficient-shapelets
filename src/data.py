@@ -18,6 +18,12 @@ def get_dataset(
 
 
 class Data:
+    """
+    A class to store a dataset, and returns some info:
+    - get sliding windows of the data
+    - return the label of a window given its index
+    - Given a list of window indices return their corresponding TS and labels
+    """
     def __init__(self, dataset_name, window_size):
         x, y = get_dataset(dataset_name=dataset_name, train=True)
         self.x_train: np.ndarray = x
