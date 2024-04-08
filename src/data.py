@@ -2,6 +2,7 @@ from sklearn.preprocessing import StandardScaler
 from numpy.lib.stride_tricks import sliding_window_view
 from aeon.datasets import load_from_tsfile
 import numpy as np
+from scipy.spatial.distance import cdist
 
 
 def get_dataset(
@@ -23,7 +24,9 @@ class Data:
     - get sliding windows of the data
     - return the label of a window given its index
     - Given a list of window indices return their corresponding TS and labels
+    - Given a list of windows indices return the shapelet transform
     """
+
     def __init__(self, dataset_name, window_size):
         x, y = get_dataset(dataset_name=dataset_name, train=True)
         self.x_train: np.ndarray = x
@@ -56,3 +59,9 @@ class Data:
         self._ts_covered = {}
         windows_labels = [self.get_window_label(wid) for wid in windows_ids]
         return np.array(windows_labels), self._ts_covered
+
+    def shapelet_transform(self, windows_ids):
+        candidates = self.windows[windows_ids]
+        windows = self.windows.reshape(self.n_ts, -1, self.window_size)
+        res = [cdist(candidates, windows).min(axis=1) for windows in windows]
+        return np.array(res)
