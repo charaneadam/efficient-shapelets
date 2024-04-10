@@ -52,7 +52,7 @@ class ClusterInfo:
             self.label,
             self.popularity * 100,
             len(self.ts_covered),
-            sum(data.y_train == self.label),
+            sum(data._train.y== self.label),
         ]
 
 
@@ -106,7 +106,7 @@ class ClustersInfo:
         return self.info_df
 
     def get_class_labels(self):
-        return np.unique(self.data.y_train)
+        return self.data.unique_labels()
 
     def get_clusters_of_labels(self, label, top=3):
         return self.info_df[self.info_df.label == label].id.values[:top]

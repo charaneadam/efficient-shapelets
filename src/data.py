@@ -87,6 +87,9 @@ class Data:
         self._train = TrainData(dataset_name, window_size)
         self._test = TestData(dataset_name, window_size)
 
+    def unique_labels(self):
+        return np.unique(self._train.y)
+
     def get_sliding_windows(self):
         return self._train.windows
 
