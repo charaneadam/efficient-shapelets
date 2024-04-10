@@ -1,14 +1,19 @@
 from data import Data
 from selection import LIST_OF_ALGORITHMS, ClustersInfo
+from selection.methods import ClusterBased
 
 
 class Experiment:
     def __init__(self, description, data, algorithm) -> None:
         self.description = description
         self.selection_method = ClustersInfo(data, algorithm)
+        self.selection = ClusterBased(self.selection_method)
 
-    def run(self):
+    def info_df(self):
         return self.selection_method.info()
+
+    def get_shapelets(self):
+        self.selection.select()
 
     def __repr__(self) -> str:
         return self.description
