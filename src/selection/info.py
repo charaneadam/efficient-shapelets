@@ -18,14 +18,15 @@ class ClusterInfo:
     cluster_size: int
         the number of points assigned to this cluster
     label: int
-        The label assigned to this cluster based on the windows 
+        The label assigned to this cluster based on the windows
         contained in the cluster
     popularity: float
         The fraction of the windows representing the majority class (label)
     ts_covered: set
-        Set of time series of class label, where subsequences have 
+        Set of time series of class label, where subsequences have
         been assigned to this cluster
     """
+
     def __init__(self, cluster_id, data, windows_indices) -> None:
         self.cluster_id: int = cluster_id
         self.w_indices = windows_indices
@@ -52,7 +53,7 @@ class ClusterInfo:
             self.label,
             self.popularity * 100,
             len(self.ts_covered),
-            sum(data._train.y== self.label),
+            sum(data._train.y == self.label),
         ]
 
 
@@ -73,6 +74,7 @@ class ClustersInfo:
     cluster_info: DataFrame
         A DataFrame containing information about the clusters
     """
+
     def __init__(self, data, algorithm) -> None:
         self.data: Data = data
         self.algorithm: ClusterAlgorithm = algorithm
@@ -125,3 +127,4 @@ class ClustersInfo:
             if count == top:
                 break
         return np.array(selected_windows)
+
