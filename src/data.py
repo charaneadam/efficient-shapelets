@@ -18,7 +18,7 @@ def get_dataset(
     return x, y
 
 
-class Data:
+class TrainData:
     """
     A class to store a dataset, and returns some info:
     - get sliding windows of the data
@@ -29,13 +29,13 @@ class Data:
 
     def __init__(self, dataset_name, window_size):
         x, y = get_dataset(dataset_name=dataset_name, train=True)
-        self.x_train: np.ndarray = x
-        self.y_train: np.ndarray = y
-        self.n_ts = self.x_train.shape[0]
-        self.ts_length = self.x_train.shape[1]
+        self.x: np.ndarray = x
+        self.y: np.ndarray = y
+        self.n_ts = self.x.shape[0]
+        self.ts_length = self.x.shape[1]
         self.window_size: int = window_size
         self.windows = sliding_window_view(
-            self.x_train, window_shape=self.window_size, axis=1
+            self.x, window_shape=self.window_size, axis=1
         ).reshape(-1, self.window_size)
         self.windows = StandardScaler().fit_transform(self.windows.T).T
         self._ts_covered: dict
@@ -46,7 +46,7 @@ class Data:
     def get_window_label(self, window_id):
         number_of_windows_per_ts = self.ts_length - self.window_size + 1
         ts_id = window_id // number_of_windows_per_ts
-        label = self.y_train[ts_id]
+        label = self.y[ts_id]
         if label in self._ts_covered:
             set_ts = self._ts_covered[label]
             set_ts.add(ts_id)
@@ -60,8 +60,52 @@ class Data:
         windows_labels = [self.get_window_label(wid) for wid in windows_ids]
         return np.array(windows_labels), self._ts_covered
 
-    def shapelet_transform(self, windows_ids):
-        candidates = self.windows[windows_ids]
-        windows = self.windows.reshape(self.n_ts, -1, self.window_size)
+
+class TestData:
+    def __init__(self, dataset_name, window_size):
+        x, y = get_dataset(dataset_name=dataset_name, train=False)
+        self.x: np.ndarray = x
+        self.y: np.ndarray = y
+        self.n_ts = self.x.shape[0]
+        self.ts_length = self.x.shape[1]
+        self.windows = sliding_window_view(
+            self.x, window_shape=window_size, axis=1
+        ).reshape(-1, window_size)
+        self.windows = StandardScaler().fit_transform(self.windows.T).T
+
+
+class Data:
+    """
+    A class to store a dataset, and returns some info:
+    - get sliding windows of the data
+    - return the label of a window given its index
+    - Given a list of window indices return their corresponding TS and labels
+    - Given a list of windows indices return the shapelet transform
+    """
+
+    def __init__(self, dataset_name, window_size):
+        self._train = TrainData(dataset_name, window_size)
+        self._test = TestData(dataset_name, window_size)
+
+    def get_sliding_windows(self):
+        return self._train.windows
+
+    def get_window_label(self, window_id):
+        return self._train.get_window_label(window_id)
+
+    def windows_labels_and_covered_ts(self, windows_ids):
+        return self._train.windows_labels_and_covered_ts(windows_ids)
+
+    def shapelet_transform(self, windows_ids, train=True):
+        candidates = self._train.windows[windows_ids]
+        if train:
+            windows = self._train.windows
+            n_ts = self._train.n_ts
+        else:
+            windows = self._test.windows
+            n_ts = self._test.n_ts
+        window_size = self._train.window_size
+
+        windows = windows.reshape(n_ts, -1, window_size)
         res = [cdist(candidates, windows).min(axis=1) for windows in windows]
         return np.array(res)
