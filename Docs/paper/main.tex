@@ -36,13 +36,14 @@
 
 \maketitle
 
+
 \section{Introduction}
 Time series classification is similar to traditional classification where the
-difference is that the order of the values of the time series is crucial.
-The order holds discriminatory features for the time series. The literature
-is rich of algorithms for classification, and one way to group these
-algorithms is based on the techniques that each algorithm uses to exploit the
-discriminatory features suggested by Bagnall et al.~\cite{bake_off}:
+difference is that the order of the values of the time series is crucial, since 
+it holds discriminatory features of the time series. The literature is rich of
+algorithms for classifying time series, and one way to group them,
+suggested by Bagnall et al.~\cite{bake_off}, is based on the techniques that
+each algorithm uses to exploit the discriminatory features:
 \begin{itemize}
 	\item Distance based: Classification is based on using distance measures to
 	      the raw time series.
@@ -99,24 +100,80 @@ inefficient and becomes impossible for even relatively small datasets.
 Instead of evaluating by giving a score to each candidate independently, our
 approach use efficient similarity search indexing approaches and exploits the
 similarity structure in order to select the best candidates. The idea is that
-good shapelets representing a class $C$ should have a lot nearest neighbors
+good shapelets representing a class $C$ should have a lot of nearest neighbors
 that are from the same class, and at the same time, should have few or no
 neighbors from other classes.
 
-\section{Preliminaries}
+
+\section{Background \& Related work}
+In a classification setup, the idea of a shapelet, introduced by Ye and 
+Keogh~\cite{keogh_shapelet}, is that time series from the same class must have 
+some shared pattern that is similar to all of them and less similar to time 
+series from other classes. A pattern is simply a subsequence of the time series,
+and the (dis-)similarity is a distance measure, usually the normalized Euclidean
+distance. Besides the high accuracy of shapelets, they are also interpretable,
+since the subsequences chosen as shapelets can be interpreted as the event that
+happened at that period of time.
+Although the idea being simple, it introduced many challenges. The two 
+challenges we are concerned about are:
+\begin{enumerate}
+  \item How to choose patterns?
+  \item How to evaluate them?
+\end{enumerate}
+In the original work~\cite{keogh_shapelet}, the authors considered all the 
+subsequences as patterns, and for the evaluation part, they ranked the patterns
+by assigning to each a score. The score was the information gain, which is based
+on the Shanon entropy, before and after considering the subsequence. At the end,
+only the subsequences with the highest score were selected as shapelets.
+Despite that only few patterns were selected, they all had to be evaluated,
+which means, the similarity between all of them had to be computed in order to 
+assign a score. Computing the similarity was the bottleneck of the computation,
+in order to speed it up, the authors had to apply early computation pruning.
+The pruning resulted in a speed up, but still the approach is very slow,
+and not practical for medium and large size datasets. To improve the running 
+time, random selection of shapelets~\cite{random_shapelets} have been 
+introduced. The authors empirically shown that by selecting a large number of
+shapelets, i.e., by randomly selecting subsequences with different lengths from 
+random time series at random positions, the computation becomes much faster
+since only few patterns are considered, while the accuracy remains competitive.
+
+In order to speed up the selection process, Ji et al.~\cite{fss} introduced 
+Fast Shapelet Transform (FSS), that works on two different steps. First, they 
+sample  time series with the help of subclass splitting. This reduces the 
+number of time series to be considered significantly, without affecting the 
+accuracy, since the goal is to look for similar patterns and not all patterns.
+Second, the Local Farthest Deviation Points (LFDP) are selected and used as the
+endpoints of the subsequences. An LFDP is the point that has the largest 
+distance from the subsequence fitting line. The intuition is that the constant
+subsequences should be ignored and only subsequences where there are changes
+should be interesting.
+
+Regardless of the technique used in order to select the candidates, the 
+evaluation in the above approaches was done using the information gain.
+Lines et al.~\cite{alternative_measures} were the first to consider using
+different evaluation methods instead of the information gain. They considered
+as evaluation measures statistical tests to verify if points from the same
+distribution or not, such as Kruskal Wallis and Mood's medians. On another 
+the same authors use the ANOVA F-statistic~\cite{shapelet_transform} as an 
+evaluation measure, which was not significantly better than the information 
+gain, but on average, shapelets selected using the F-statistic resulted in high
+classification accuracy.
 
 
-
-
-\section{Related work}
-This~\cite{keogh_shapelet} is where it all started, it has to be here.
-This paper~\cite{random_shapelets} uses random shapelet extraction.
-This paper~\cite{fss} uses neat tricks select shapelets.
 This paper~\cite{learning_shapelets} takes an alternative approach, where 
 instead of selecting shapelets it \emph{learns} non existing shapelets.
 We should mention the evaluation measures~\cite{alternative_measures}.
 We will use Silhouette~\cite{silhouettes} as motivation to exploit neighborhood
 structure.
+
+
+\section{Preliminaries}
+
+
+\section{Selection}
+
+
+
 
 
 %NN-Descent~\cite{NN-Descent} is based on the principle: \textit{A neighbor of
