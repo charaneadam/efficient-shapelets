@@ -39,7 +39,7 @@
 
 \section{Introduction}
 Time series classification is similar to traditional classification where the
-difference is that the order of the values of the time series is crucial, since 
+difference is that the order of the values of the time series is crucial, since
 it holds discriminatory features of the time series. The literature is rich of
 algorithms for classifying time series, and one way to group them,
 suggested by Bagnall et al.~\cite{bake_off}, is based on the techniques that
@@ -64,7 +64,7 @@ each algorithm uses to exploit the discriminatory features:
 	      the previous techniques.
 \end{itemize}
 Our focus in this paper is on extracting discriminating patterns, i.e. shapelets
-that represent time series from each class. The extracted patterns then can be 
+that represent time series from each class. The extracted patterns then can be
 used by algorithms from the shapelet based technique in order to execute the
 classification task.
 
@@ -106,61 +106,65 @@ neighbors from other classes.
 
 
 \section{Background \& Related work}
-In a classification setup, the idea of a shapelet, introduced by Ye and 
-Keogh~\cite{keogh_shapelet}, is that time series from the same class must have 
-some shared pattern that is similar to all of them and less similar to time 
+In a classification setup, the idea of a shapelet, introduced by Ye and
+Keogh~\cite{keogh_shapelet}, is that time series from the same class must have
+some shared pattern that is similar to all of them and less similar to time
 series from other classes. A pattern is simply a subsequence of the time series,
 and the (dis-)similarity is a distance measure, usually the normalized Euclidean
 distance. Besides the high accuracy of shapelets, they are also interpretable,
 since the subsequences chosen as shapelets can be interpreted as the event that
 happened at that period of time.
-Although the idea being simple, it introduced many challenges. The two 
+Although the idea being simple, it introduced many challenges. The two
 challenges we are concerned about are:
 \begin{enumerate}
-  \item How to choose patterns?
-  \item How to evaluate them?
+	\item How to choose patterns?
+	\item How to evaluate them?
 \end{enumerate}
-In the original work~\cite{keogh_shapelet}, the authors considered all the 
+In the original work~\cite{keogh_shapelet}, the authors considered all the
 subsequences as patterns, and for the evaluation part, they ranked the patterns
 by assigning to each a score. The score was the information gain, which is based
 on the Shanon entropy, before and after considering the subsequence. At the end,
 only the subsequences with the highest score were selected as shapelets.
 Despite that only few patterns were selected, they all had to be evaluated,
-which means, the similarity between all of them had to be computed in order to 
+which means, the similarity between all of them had to be computed in order to
 assign a score. Computing the similarity was the bottleneck of the computation,
 in order to speed it up, the authors had to apply early computation pruning.
 The pruning resulted in a speed up, but still the approach is very slow,
-and not practical for medium and large size datasets. To improve the running 
-time, random selection of shapelets~\cite{random_shapelets} have been 
+and not practical for medium and large size datasets. To improve the running
+time, random selection of shapelets~\cite{random_shapelets} have been
 introduced. The authors empirically shown that by selecting a large number of
-shapelets, i.e., by randomly selecting subsequences with different lengths from 
+shapelets, i.e., by randomly selecting subsequences with different lengths from
 random time series at random positions, the computation becomes much faster
 since only few patterns are considered, while the accuracy remains competitive.
 
-In order to speed up the selection process, Ji et al.~\cite{fss} introduced 
-Fast Shapelet Transform (FSS), that works on two different steps. First, they 
-sample  time series with the help of subclass splitting. This reduces the 
-number of time series to be considered significantly, without affecting the 
+In order to speed up the selection process, Ji et al.~\cite{fss} introduced
+Fast Shapelet Transform (FSS), that works on two different steps. First, they
+sample  time series with the help of subclass splitting. This reduces the
+number of time series to be considered significantly, without affecting the
 accuracy, since the goal is to look for similar patterns and not all patterns.
 Second, the Local Farthest Deviation Points (LFDP) are selected and used as the
-endpoints of the subsequences. An LFDP is the point that has the largest 
+endpoints of the subsequences. An LFDP is the point that has the largest
 distance from the subsequence fitting line. The intuition is that the constant
 subsequences should be ignored and only subsequences where there are changes
 should be interesting.
 
-Regardless of the technique used in order to select the candidates, the 
+Regardless of the technique used in order to select the candidates, the
 evaluation in the above approaches was done using the information gain.
 Lines et al.~\cite{alternative_measures} were the first to consider using
 different evaluation methods instead of the information gain. They considered
 as evaluation measures statistical tests to verify if points from the same
-distribution or not, such as Kruskal Wallis and Mood's medians. On another 
-the same authors use the ANOVA F-statistic~\cite{shapelet_transform} as an 
-evaluation measure, which was not significantly better than the information 
+distribution or not, such as Kruskal Wallis and Mood's medians. On another
+the same authors use the ANOVA F-statistic~\cite{shapelet_transform} as an
+evaluation measure, which was not significantly better than the information
 gain, but on average, shapelets selected using the F-statistic resulted in high
 classification accuracy.
+A recent work~\cite{silhoutte_shapelets} proposed the usage of Silhouettes
+\cite{silhouettes} as an evaluation measure, the results were competitive with
+the F-statistic and information gain, but the silhouette had much better results
+when the number of shapelets used to classify was small.
 
 
-This paper~\cite{learning_shapelets} takes an alternative approach, where 
+This paper~\cite{learning_shapelets} takes an alternative approach, where
 instead of selecting shapelets it \emph{learns} non existing shapelets.
 We should mention the evaluation measures~\cite{alternative_measures}.
 We will use Silhouette~\cite{silhouettes} as motivation to exploit neighborhood
@@ -168,16 +172,64 @@ structure.
 
 
 \section{Preliminaries}
+This section defines the key concepts used in the paper.
+\begin{definition}[Time Series]
+	A time series $T$ is sequence of $n$ consecutive real numbers:
+	$T = [T_1, T_2, \dots, T_n]$.
+\end{definition}
 
+\begin{definition}[Subsequence]
+	A subsequence of length $l$ from a time series $T$ starting from position $i$
+	is an ordered set of consecutive values from $T$ denoted as:
+	$S_{i, l} = [T_i, T_{i+1},, \dots, T_{i+l-1}]$.
+\end{definition}
 
-\section{Selection}
+\begin{definition}[Sliding window]
+	A sliding window of length $l$ over a time series $T$ is the set of
+	all subsequences of length $l$ extracted from $T$:
+	$W_T^l = [S_{1, l}, S_{2, l}, \dots S_{n-l+1, l}]$.
+\end{definition}
 
+A dataset consists of $m$ time series, each having a class label $c \in [1, 2,
+		\dots, K]$. The sliding windows $W_T^l$ all have the same class label $c$ of the
+time series $T$ they were extracted from. To compute the evaluation score of
+each window using the Silhouette, we need first to introduce a (dis-)similarity
+measure. In this work, we consider the normalized Euclidean distance:
 
+\begin{definition}[Normalized Euclidean distance]
+	The normalized Euclidean distance between two subsequences $S$ and $Q$ of
+	length $l$:
+	$$d(S, Q) = \sqrt{\sum_{i=1}^l (\frac{S_i - \mu_S}{\sigma_S} - \frac{Q_i -
+				\mu_Q}{\sigma_Q})^2}$$
+	where $\mu_S$ and $\sigma_S$ represent the mean and standard deviation of
+	$S$ respectively.
+\end{definition}
 
+Finally, we define the silhouette score for a subsequence:
+
+\begin{definition}[Silhouette score of a subsequence]
+	Given a set $\mathcal{D}$ of subsequences (sliding windows) and their
+	corresponding labels, the silhouette score for a subsequence $S_i$ having label
+	$c$ is:
+	$$
+		s(S_i) = \frac{b - a}{\max{(a, b)}}
+	$$
+	where:
+	\begin{itemize}
+		\item $b = \frac{\sum_{j \in I \setminus I_c}d(S_i, S_j)}{|I \setminus I_c|}$,
+		\item $a = \frac{\sum_{k \in I_c}d(S_i, S_k)}{|I_c|}$,
+		\item $I$ is the set of indices of all subsequences in $\mathcal{D}$, and
+		\item $I_c$ is the set of indices of subsequences having label $c$.
+	\end{itemize}
+\end{definition}
+
+Notice, that our definition of the silhouette, the term $b$ considers all 
+subsequences from other classes instead of only considering only the class that
+is closest to the subsequence $S_i$.
 
 
 %NN-Descent~\cite{NN-Descent} is based on the principle: \textit{A neighbor of
-	%a neighbor is likely to be a neighbor}. The idea is, given an approximation
+%a neighbor is likely to be a neighbor}. The idea is, given an approximation
 %graph of the nearest neighbor, then the approximation can be improved,
 %in an iterative fashion, by exploring the neighbors of the neighbors of each
 %point. To improve the running time, the authors use local join to avoid
