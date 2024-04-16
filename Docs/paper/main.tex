@@ -216,27 +216,38 @@ Finally, we define the silhouette score for a subsequence:
 	$$
 	where:
 	\begin{itemize}
-		\item $b = \frac{\sum_{j \in I \setminus I_c}d(S_i, S_j)}{|I \setminus I_c|}$,
 		\item $a = \frac{\sum_{k \in I_c}d(S_i, S_k)}{|I_c|}$,
+		\item $b = \frac{\sum_{j \in I \setminus I_c}d(S_i, S_j)}{|I \setminus I_c|}$,
 		\item $I$ is the set of indices of all subsequences in $\mathcal{D}$, and
 		\item $I_c$ is the set of indices of subsequences having label $c$.
 	\end{itemize}
 \end{definition}
 
-Notice, that our definition of the silhouette, the term $b$ considers all 
+Notice that our definition of the silhouette, the term $b$ considers all
 subsequences from other classes instead of only considering only the class that
 is closest to the subsequence $S_i$.
 
 
-%NN-Descent~\cite{NN-Descent} is based on the principle: \textit{A neighbor of
-%a neighbor is likely to be a neighbor}. The idea is, given an approximation
-%graph of the nearest neighbor, then the approximation can be improved,
-%in an iterative fashion, by exploring the neighbors of the neighbors of each
-%point. To improve the running time, the authors use local join to avoid
-%comparing same points many times in the same iteration. They also use
-%incremental search to avoid comparing points that have been compared in
-%previous iterations. Also, sampled is used to lower the overhead of local
-%joins. Finally, random projection trees are used to initialize the graph.
+\section{Approach}
+The bottleneck of the computation is in the evaluation part, where, in order to
+compute the Silhouette score (also for the F-statistic and all other measures),
+all pairs of distances have to be computed. To avoid that, we will use the fact
+that shapelets that have a high silhouette score are of good quality for time
+series classification. Since we know, in a clustering setup, silhouette is high
+when he clusters are compact and far from each other, then the problem of
+finding good quality shapelets reduces to finding clusters with high silhouette
+scores.
+
+We start by extracting the set of sliding windows $W$ from all the time series
+$W = \bigcup_T W_T^l$, then we cluster all the windows in $W$.
+For each cluster $C_i$, we assign a label $c$ using a majority vote, i.e., the
+label of cluster $C_i$ is the label of the set with largest cardinal, consisting
+of windows assigned to cluster $C_i$ that have the same class label.
+
+\section{Experimental Evaluation}
+
+\section{Conclusion}
+
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliography}
