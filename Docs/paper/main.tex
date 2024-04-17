@@ -27,6 +27,12 @@
 }
 \email{johann.gamper@unibz.it}
 
+
+\newcommand{\mc}[1]{\textcolor{teal}{ --- MC: #1 --- }}
+\newcommand{\ac}[1]{\textcolor{orange}{ --- AC: #1 --- }}
+\newcommand{\jg}[1]{\textcolor{red}{ --- JG: #1 --- }}
+
+
 %%
 %% The abstract is a short summary of the work to be presented in the
 %% article.
@@ -223,24 +229,37 @@ Finally, we define the silhouette score for a subsequence:
 
 Notice that our definition of the silhouette, the term $b$ considers all
 subsequences from other classes instead of only considering only the class that
-is closest to the subsequence $S_i$.
+is closest to the subsequence $S_i$. Next, a fixed number of subsequences from
+each class are selected as shapelets, based on the highest score achieved.
 
 
 \section{Approach}
 The bottleneck of the computation is in the evaluation part, where, in order to
-compute the Silhouette score (also for the F-statistic and all other measures),
+compute the Silhouette score (same for the F-statistic and the other measures),
 all pairs of distances have to be computed. To avoid that, we will use the fact
-that shapelets that have a high silhouette score are of good quality for time
-series classification. Since we know, in a clustering setup, silhouette is high
-when he clusters are compact and far from each other, then the problem of
-finding good quality shapelets reduces to finding clusters with high silhouette
-scores.
+that shapelets with a high silhouette score are of good quality for time
+series classification. Since in a clustering setup, silhouette index of a 
+cluster is high when the cluster is compact and far from other clusters, and 
+the silhouette score of a cluster is simply the average of the silhouette 
+scores of the subsequences in that cluster, then the subsequences with high 
+silhouette are contained in the cluster.
 
+\subsection{Clustering-based shapelets}
+\begin{figure*}
+  \includegraphics[width=\textwidth]{imgs/clustering.png}
+  \caption{Sliding windows of length 40 from \emph{CBF} dataset, with centers
+  (red dots) of 100 clusters using K-Means algorithm.\label{fig:clustering}}
+\end{figure*}
 We start by extracting the set of sliding windows $W$ from all the time series
 $W = \bigcup_T W_T^l$, then we cluster all the windows in $W$.
 For each cluster $C_i$, we assign a label $c$ using a majority vote, i.e., the
 label of cluster $C_i$ is the label of the set with largest cardinal, consisting
 of windows assigned to cluster $C_i$ that have the same class label.
+Figure~\ref{fig:clustering} shows an example from the \emph{CBF} dataset plotted
+on the plan by keeping only the first two PCA components. The gray dots in the
+left sub-figure are the windows of length 40, and the red dots are the centers
+of the clusters obtained y running K-Means algorithm with 100 clusters. The
+right sub-figure shows the labels of the subsequences.
 
 \section{Experimental Evaluation}
 
