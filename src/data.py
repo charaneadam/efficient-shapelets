@@ -27,7 +27,7 @@ class TrainData:
     - Given a list of windows indices return the shapelet transform
     """
 
-    def __init__(self, dataset_name, window_size):
+    def __init__(self, dataset_name, window_size, preprocessors=None):
         x, y = get_dataset(dataset_name=dataset_name, train=True)
         self.x: np.ndarray = x
         self.y: np.ndarray = y
@@ -38,6 +38,9 @@ class TrainData:
             self.x, window_shape=self.window_size, axis=1
         ).reshape(-1, self.window_size)
         self.windows = StandardScaler().fit_transform(self.windows.T).T
+        if preprocessors:
+            for processor in preprocessors:
+                self.windows = processor.fit_transform(self.windows)
         self._ts_covered: dict
 
     def get_sliding_windows(self):
@@ -83,8 +86,8 @@ class Data:
     - Given a list of windows indices return the shapelet transform
     """
 
-    def __init__(self, dataset_name, window_size):
-        self._train = TrainData(dataset_name, window_size)
+    def __init__(self, dataset_name, window_size, preprocessors=None):
+        self._train = TrainData(dataset_name, window_size, preprocessors)
         self._test = TestData(dataset_name, window_size)
 
     def unique_labels(self):
