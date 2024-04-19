@@ -264,7 +264,11 @@ after removing all the clusters where the popularity of the dominant class is
 below some certain threshold.
 The idea is that we want to get rid of all subsequences from different classes
 that are similar to each other, since a shapelet should be a pattern repeated
-between time series from the same class.
+between time series from the same class. Notice that the threshold might have a
+high impact on the results, since when we apply a $90\%$ threshold, we have lost
+some important clusters for class 2 (top right in Figure
+\ref{fig:clustering_threshold}, as well as some clusters for class 1 (in the 
+middle of the plot).
 \begin{figure*}
 	\includegraphics[width=\textwidth]{imgs/clustering_thresholds.png}
 	\caption{Windows left after removing all the clusters where the popularity of
@@ -276,6 +280,11 @@ between time series from the same class.
 	\begin{itemize}
 		\item How many clusters we should use?
 		\item Which clusters to keep (so far I am using the popularity)?
+    \item Another approach would be to select top clusters from each class. This
+      is especially relevant when a class is never dominating in terms of 
+      population, that is, if we put a threshold, there are no clusters
+      where a class $c$ has more than the threshold of the population, then we
+      will end up with no shapelets representing a specific class.
 		\item Should we use all the clusters kept?
 	\end{itemize}
 	Some information that we have and that have not been used yet:
