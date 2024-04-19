@@ -293,6 +293,17 @@ between time series from the same class.
 	\end{itemize}
 }
 
+\subsection{Similarity search indexing-based shapelets}
+In the previous subsection, we have used clustering to get rid of the evaluation
+part and reduce the computational overhead. However, we used clustering because
+it is the first intuitive step that comes in order to optimize for the 
+silhouette score.
+Since what we care about is the structure of similarity search, i.e., we want to
+know, for each subsequence, which other subsequences are the most similar. To
+answer these questions, one can use efficient indexing data structures from the
+nearest-neighbor problem literature, which is more efficient compared to 
+clustering in terms of time complexity and running time.
+
 \section{Experimental Evaluation}
 
 \section{Conclusion}
