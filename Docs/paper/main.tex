@@ -267,7 +267,7 @@ that are similar to each other, since a shapelet should be a pattern repeated
 between time series from the same class. Notice that the threshold might have a
 high impact on the results, since when we apply a $90\%$ threshold, we have lost
 some important clusters for class 2 (top right in Figure
-\ref{fig:clustering_threshold}, as well as some clusters for class 1 (in the 
+\ref{fig:clustering_threshold}, as well as some clusters for class 1 (in the
 middle of the plot).
 \begin{figure*}
 	\includegraphics[width=\textwidth]{imgs/clustering_thresholds.png}
@@ -280,11 +280,11 @@ middle of the plot).
 	\begin{itemize}
 		\item How many clusters we should use?
 		\item Which clusters to keep (so far I am using the popularity)?
-    \item Another approach would be to select top clusters from each class. This
-      is especially relevant when a class is never dominating in terms of 
-      population, that is, if we put a threshold, there are no clusters
-      where a class $c$ has more than the threshold of the population, then we
-      will end up with no shapelets representing a specific class.
+		\item Another approach would be to select top clusters from each class. This
+		      is especially relevant when a class is never dominating in terms of
+		      population, that is, if we put a threshold, there are no clusters
+		      where a class $c$ has more than the threshold of the population, then we
+		      will end up with no shapelets representing a specific class.
 		\item Should we use all the clusters kept?
 	\end{itemize}
 	Some information that we have and that have not been used yet:
@@ -309,10 +309,16 @@ first intuitive idea in order to optimize for the silhouette score.
 Since what we care about is the structure of similarity search, i.e., we want to
 know, for each subsequence, which other subsequences are the most similar. An
 alternative approach to answer these questions, one can use efficient indexing
-data structures from the nearest-neighbor problem literature, which is more 
+data structures from the nearest-neighbor problem literature, which is more
 efficient compared to clustering in terms of time complexity and running time.
 
 \section{Experimental Evaluation}
+In this section we compare the running time and the accuracy of our two
+approaches with the baselines, namely:
+(1) Ultra fast shapelet transform, which randomly select shapelets, evaluate
+selects the ones with the highest rank. (2) Learning shapelets. (3) Fast them,
+and Shapelet Selection (FSS).
+
 
 \section{Conclusion}
 
