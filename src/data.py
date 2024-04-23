@@ -41,12 +41,14 @@ class TrainData:
         if preprocessors:
             for processor in preprocessors:
                 self.windows = processor.fit_transform(self.windows)
-        self._ts_covered: dict
+        self._ts_covered: dict | None = None
 
     def get_sliding_windows(self):
         return self.windows
 
     def get_window_label(self, window_id):
+        if self._ts_covered is None:
+            self._ts_covered = {}
         number_of_windows_per_ts = self.ts_length - self.window_size + 1
         ts_id = window_id // number_of_windows_per_ts
         label = self.y[ts_id]
@@ -59,7 +61,6 @@ class TrainData:
         return label
 
     def windows_labels_and_covered_ts(self, windows_ids):
-        self._ts_covered = {}
         windows_labels = [self.get_window_label(wid) for wid in windows_ids]
         return np.array(windows_labels), self._ts_covered
 
