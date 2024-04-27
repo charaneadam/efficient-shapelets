@@ -88,6 +88,7 @@ class Data:
     """
 
     def __init__(self, dataset_name, window_size, preprocessors=None):
+        self.window_size = window_size
         self._train = TrainData(dataset_name, window_size, preprocessors)
         self._test = TestData(dataset_name, window_size)
 
