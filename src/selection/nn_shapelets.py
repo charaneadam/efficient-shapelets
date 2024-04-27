@@ -8,7 +8,7 @@ from data import Data
 
 class NearestNeighborShapelets:
     def __init__(
-        self, data: Data, n_neighbors: int = 100, threshold: int = 0.7
+        self, data: Data, n_neighbors: int = 100, threshold: float = 0.7
     ) -> None:
         self.pca_windows = data.get_sliding_windows().astype("float32")
         self.data = data
