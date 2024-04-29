@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from numpy.lib.stride_tricks import sliding_window_view
 from aeon.datasets import load_from_tsfile
@@ -9,8 +11,10 @@ def get_dataset(
     dataset_name,
     train,
 ) -> tuple[np.ndarray, np.ndarray]:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DATA_PATH = Path(BASE_DIR) / "data"
     split = "TRAIN" if train else "TEST"
-    filepath = f"../data/{dataset_name}/{dataset_name}_{split}.ts"
+    filepath = str(DATA_PATH / f"{dataset_name}/{dataset_name}_{split}.ts")
     x, y = load_from_tsfile(filepath)
     n_ts, _, ts_length = x.shape
     x = x.reshape((n_ts, ts_length))
