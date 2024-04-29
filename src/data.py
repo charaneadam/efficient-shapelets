@@ -64,6 +64,14 @@ class TrainData:
         self._ts_covered[label] = set_ts
         return label
 
+    def get_window_info(self, window_id):
+        number_of_windows_per_ts = self.ts_length - self.window_size + 1
+        ts_id = window_id // number_of_windows_per_ts
+        label = self.y[ts_id]
+        start = window_id % number_of_windows_per_ts
+        end = start + self.window_size - 1
+        return (ts_id, start, end)
+
     def windows_labels_and_covered_ts(self, windows_ids):
         windows_labels = [self.get_window_label(wid) for wid in windows_ids]
         return np.array(windows_labels), self._ts_covered
@@ -95,6 +103,7 @@ class Data:
         self.window_size = window_size
         self._train = TrainData(dataset_name, window_size, preprocessors)
         self._test = TestData(dataset_name, window_size)
+        self.ts_length = self._train.ts_length
 
     def unique_labels(self):
         return np.unique(self._train.y)
@@ -107,6 +116,11 @@ class Data:
 
     def windows_labels_and_covered_ts(self, windows_ids):
         return self._train.windows_labels_and_covered_ts(windows_ids)
+
+    def get_window_info(self, window_id):
+        return self._train.get_window_info(window_id)
+
+
 
     def shapelet_transform(self, windows_ids, train=True):
         candidates = self._train.windows[windows_ids]
