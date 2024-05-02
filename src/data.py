@@ -41,6 +41,7 @@ class TrainData:
         self.windows = sliding_window_view(
             self.x, window_shape=self.window_size, axis=1
         ).reshape(-1, self.window_size)
+        self.n_windows = self.windows.shape[0]
         self.windows = StandardScaler().fit_transform(self.windows.T).T
         if preprocessors:
             for processor in preprocessors:
@@ -73,6 +74,7 @@ class TrainData:
         return (ts_id, start, end)
 
     def windows_labels_and_covered_ts(self, windows_ids):
+        self._ts_covered = {}
         windows_labels = [self.get_window_label(wid) for wid in windows_ids]
         return np.array(windows_labels), self._ts_covered
 
@@ -104,6 +106,8 @@ class Data:
         self._train = TrainData(dataset_name, window_size, preprocessors)
         self._test = TestData(dataset_name, window_size)
         self.ts_length = self._train.ts_length
+        self.n_windows = self._train.n_windows
+        self.windows_labels = None
 
     def unique_labels(self):
         return np.unique(self._train.y)
@@ -120,7 +124,12 @@ class Data:
     def get_window_info(self, window_id):
         return self._train.get_window_info(window_id)
 
-
+    def get_windows_labels(self):
+        if self.windows_labels is None:
+            self.windows_labels = [
+                self.get_window_label(i) for i in range(self.n_windows)
+            ]
+        return self.windows_labels
 
     def shapelet_transform(self, windows_ids, train=True):
         candidates = self._train.windows[windows_ids]
