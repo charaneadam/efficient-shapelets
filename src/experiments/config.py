@@ -8,6 +8,8 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
+from src.methods.fss import FastShapeletSelectionTransform
+
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = Path(BASE_PATH).parent / "data"
@@ -28,6 +30,7 @@ SELECTION_METHODS = {
     "Random shapelets": RandomShapeletTransform,
     "Learning shapelets": LearningShapeletsTransform,
     "Nearest neighbor": NearestNeighborTransform,
+    "Fast Shapelet Selection": FastShapeletSelectionTransform,
 }
 
 CLASSIFIERS = {

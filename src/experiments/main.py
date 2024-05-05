@@ -54,7 +54,7 @@ def run(dataset_name):
 
 
 if __name__ == "__main__":
-    datasets_names = ["CBF", "GunPoint", "ItalyPowerDemand"]
+    datasets_names = ["CBF", "GunPoint"]
     for dataset_name in datasets_names:
         print(dataset_name)
         run(dataset_name)
