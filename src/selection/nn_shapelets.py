@@ -1,46 +1,71 @@
-import pandas as pd
+from numpy.lib.stride_tricks import sliding_window_view
+from scipy.spatial.distance import cdist
+from sklearn.preprocessing import StandardScaler
+
 import faiss
 
-# TODO: Local imports have to be fixed later, as for now, experiments and code
-# changes are being done mainly on jupyter.
-from data import Data
 
+class NearestNeighbor:
+    def __init__(self, verbose=0):
+        self.window_size: int | None = None
+        self.index = None
+        self.X = None
+        self.y = None
+        self.verbose = verbose
 
-class NearestNeighborShapelets:
-    def __init__(
-        self, data: Data, n_neighbors: int = 100, threshold: float = 0.7
-    ) -> None:
-        self.windows = data.get_sliding_windows().astype("float32")
-        self.data: Data = data
-        self.n_neighbors = n_neighbors
-        self.threshold = threshold
-        self.df: pd.DataFrame | None = None
-        self.init_index()
+    def _get_windows(self, X):
+        windows = sliding_window_view(X, window_shape=self.window_size, axis=1)
+        windows = windows.reshape(-1, self.window_size).astype("float32")
+        windows = StandardScaler().fit_transform(windows.T).T
+        return windows
 
-    def init_index(self):
-        self.index = faiss.IndexFlatL2(self.data.window_size)
+    def _set_params(self, X, y):
+        self.X, self.y = X, y
+        self.n_ts, self.ts_length = X.shape
+
+        self.window_size = int(0.3 * self.ts_length)
+        self.window_size = 30
+        if self.verbose:
+            print(f"Window length: {self.window_size}")
+
+        self.windows = self._get_windows(X)
+        self.n_windows = self.windows.shape[0]
+
+        self.index = faiss.IndexFlatL2(self.window_size)
         self.index.add(self.windows)
+
+        self.n_neighbors = len(set(self.y)) * 4 + 1
+        self.n_neighbors = 10
+        if self.verbose:
+            print(f"# neighbors: {self.n_neighbors}")
+        self.threshold = 0.8
+
+    def fit(self, X, y):
+        self._set_params(X, y)
         self.distances, self.indices = self.index.search(self.windows, self.n_neighbors)
+        self.select_shapelets()
 
-    def get_shapelets_ids(self):
-        windows_labels = self.data.get_windows_labels()
-        keep = []
-        for i in range(self.data.n_windows):
-            window_info = self.data.windows_labels_and_covered_ts(self.indices[i])
-            self._ts_covered = None
-            neighbors_labels = window_info[0]
-            n_ts_covered = len(window_info[1][windows_labels[i]])
-            ts_id = i // (self.data._train.ts_length - self.data.window_size + 1)
-            population_fraction = (
-                sum(neighbors_labels == windows_labels[i]) / self.n_neighbors
-            )
-            if population_fraction >= self.threshold:
-                keep.append(
-                    [i, population_fraction, windows_labels[i], n_ts_covered, ts_id]
-                )
-        self.df = pd.DataFrame(
-            sorted(keep, key=lambda x: x[1], reverse=True),
-            columns=["window", "popularity", "label", "ts_covered", "ts_id"],
-        )
+    def get_window_label(self, window_id):
+        number_of_windows_per_ts = self.ts_length - self.window_size + 1
+        ts_id = window_id // number_of_windows_per_ts
+        label = self.y[ts_id]
+        return label
 
-        return self.df.window.values
+    def select_shapelets(self):
+        self.selected = []
+        for window_id in range(self.n_windows):
+            label = self.get_window_label(window_id)
+            same_label_cnt = 0
+            for neighbor_id in self.indices[window_id]:
+                n_label = self.get_window_label(neighbor_id)
+                if n_label == label:
+                    same_label_cnt += 1
+            popularity = same_label_cnt / self.n_neighbors
+            if popularity >= self.threshold:
+                self.selected.append(window_id)
+
+    def transform(self, X):
+        windows = self._get_windows(X)
+        shapelets = self.windows[self.selected]
+        dists = cdist(windows, shapelets).reshape(X.shape[0], -1, len(self.selected))
+        return dists.min(axis=1)
