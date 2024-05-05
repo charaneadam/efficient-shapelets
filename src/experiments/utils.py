@@ -45,4 +45,4 @@ def evaluate(X_tr, y_tr, X_te, y_te, Model, params={}):
     model.fit(X_tr, y_tr)
     y_pred = model.predict(X_te)
     acc = accuracy_score(y_pred, y_te)
-    print(f"Accuracy: {acc}")
+    return acc

@@ -6,12 +6,15 @@ import faiss
 
 
 class NearestNeighbor:
-    def __init__(self, verbose=0):
+    def __init__(self, verbose=0, threshold=0.8, n_neighbors=10, window_size=30):
         self.window_size: int | None = None
         self.index = None
         self.X = None
         self.y = None
         self.verbose = verbose
+        self.threshold = threshold
+        self.n_neighbors = n_neighbors
+        self.window_size = window_size
 
     def _get_windows(self, X):
         windows = sliding_window_view(X, window_shape=self.window_size, axis=1)
@@ -23,8 +26,6 @@ class NearestNeighbor:
         self.X, self.y = X, y
         self.n_ts, self.ts_length = X.shape
 
-        self.window_size = int(0.3 * self.ts_length)
-        self.window_size = 30
         if self.verbose:
             print(f"Window length: {self.window_size}")
 
@@ -34,11 +35,9 @@ class NearestNeighbor:
         self.index = faiss.IndexFlatL2(self.window_size)
         self.index.add(self.windows)
 
-        self.n_neighbors = len(set(self.y)) * 4 + 1
-        self.n_neighbors = 10
+        self.window_size = min(self.window_size, int(0.4 * self.X.shape[1]))
         if self.verbose:
             print(f"# neighbors: {self.n_neighbors}")
-        self.threshold = 0.8
 
     def fit(self, X, y):
         self._set_params(X, y)
