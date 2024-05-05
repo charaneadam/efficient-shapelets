@@ -1,2 +1,3 @@
-from learning_shapelets import LearningShapeletsTransform
-from nn_shapelets import NearestNeighborTransform
+from .learning_shapelets import LearningShapeletsTransform
+from .nn_shapelets import NearestNeighborTransform
+from .randomShapelets import RandomShapeletTransform, RandomDilatedShapeletTransform
