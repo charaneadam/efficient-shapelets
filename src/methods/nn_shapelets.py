@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 import faiss
 
 
-class NearestNeighbor:
+class NearestNeighborTransform:
     def __init__(self, verbose=0, threshold=0.8, n_neighbors=10, window_size=30):
         self.window_size: int | None = None
         self.index = None
