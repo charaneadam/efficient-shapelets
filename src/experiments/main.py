@@ -18,46 +18,59 @@ def _transform(data, Approach, params={}):
     return X_tr, y_train, X_te, y_test
 
 
-def _classify(X_tr, y_tr, X_te, y_te, model_name):
+def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
     Model, params = CLASSIFIERS[model_name]
     model = Model(**params)
     model.fit(X_tr, y_tr)
     y_pred = model.predict(X_te)
     acc = accuracy_score(y_pred, y_te)
-    print(f"Model name: {model_name}, accuracy: {acc}")
+    info['models'][model_name] = acc
 
 
-def transform_dataset(data: Data, method_name):
+def transform_dataset(data: Data, method_name, info):
     method = SELECTION_METHODS[method_name]
     start = perf_counter()
     X_tr, y_train, X_te, y_test = _transform(data, method)
     end = perf_counter()
     elapsed_time = end - start
     num_shapelets = X_tr.shape[1]
-    print(
-        f"{method_name} ran in {elapsed_time}(s) and extracted {num_shapelets} shapelets."
-    )
+    info['time'] = elapsed_time
+    info['n_shapelets'] = num_shapelets
     return X_tr, y_train, X_te, y_test
 
 
-def classify_dataset(X_tr, y_train, X_te, y_test):
+def classify_dataset(X_tr, y_train, X_te, y_test, info):
+    info['models'] = dict()
     for model_name in CLASSIFIERS.keys():
-        _classify(X_tr, y_train, X_te, y_test, model_name)
+        _classify(X_tr, y_train, X_te, y_test, model_name, info)
 
 
-def run(dataset_name):
-    data = Data(dataset_name)
+def run_dataset(dataset_name):
+    dataset_info = dict()
+    try:
+        data = Data(dataset_name)
+    except:
+        return
     for method_name in SELECTION_METHODS.keys():
-        X_tr, y_train, X_te, y_test = transform_dataset(data, method_name)
-        classify_dataset(X_tr, y_train, X_te, y_test)
-        print()
+        try:
+            method_info = dict()
+            X_tr, y_train, X_te, y_test = transform_dataset(data, method_name, method_info)
+            classify_dataset(X_tr, y_train, X_te, y_test, method_info)
+            dataset_info[method_name] = method_info
+        except:
+            pass
+    return dataset_info
 
 
-if __name__ == "__main__":
-    datasets_names = ["CBF", "GunPoint"]
+
+def run():
+    results = dict()
+    datasets_names = ["CBF", "GunPoint", "ArrowHead", 'Beef', 'BME']
     for dataset_name in datasets_names:
-        print(dataset_name)
-        run(dataset_name)
-        print()
-        print()
-        print()
+        dataset_info = run_dataset(dataset_name)
+        results[dataset_name] = dataset_info
+    return results
+
+if __name__ == '__main__':
+    import json
+    print(json.dumps(run(), indent=4))
