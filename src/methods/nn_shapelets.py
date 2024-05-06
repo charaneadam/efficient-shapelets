@@ -32,7 +32,8 @@ class NearestNeighborTransform:
         self.windows = self._get_windows(X)
         self.n_windows = self.windows.shape[0]
 
-        self.index = faiss.IndexFlatL2(self.window_size)
+        # self.index = faiss.IndexFlatL2(self.window_size)
+        self.index = faiss.IndexHNSWFlat(self.window_size, self.n_neighbors)
         self.index.add(self.windows)
 
         self.window_size = min(self.window_size, int(0.4 * self.X.shape[1]))
