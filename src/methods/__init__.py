@@ -2,3 +2,5 @@ from .learning_shapelets import LearningShapeletsTransform
 from .nn_shapelets import NearestNeighborTransform
 from .randomShapelets import RandomShapeletTransform, RandomDilatedShapeletTransform
 from .fss import FastShapeletSelectionTransform
+from .clustering import KmeansTransform
+from .fss import FastShapeletSelectionTransform
