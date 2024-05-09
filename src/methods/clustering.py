@@ -26,15 +26,33 @@ class KmeansTransform:
         self.y = y
         self.labels = set(self.y)
         self.windows = self.get_windows(X)
-        self.n_centroids = 1024
+        self.n_centroids = 512
         self.niter = 20
         self.verbose = True
 
+    # def plus_plus(self):
+        # centroids = [self.windows[0]]
+        # for _ in range(1, self.n_centroids):
+            # dist_sq = np.array([min([np.inner(c-x,c-x) for c in centroids]) for x in self.windows])
+            # probs = dist_sq/dist_sq.sum()
+            # cumulative_probs = probs.cumsum()
+            # r = np.random.rand()
+            # i = 0
+            # for j, p in enumerate(cumulative_probs):
+                # if r < p:
+                    # i = j
+                    # break
+            # centroids.append(self.windows[i])
+        # return np.array(centroids)
+
     def _cluster(self):
+        # centroids = self.plus_plus()
         self.kmeans = faiss.Kmeans(
-            self.window_size, self.n_centroids, niter=self.niter, verbose=self.verbose
+            self.window_size, self.n_centroids, niter=self.niter, 
+            verbose=self.verbose
         )
         self.kmeans.train(self.windows)
+        # self.kmeans.train(self.windows, init_centroids=centroids)
 
         self.dists, self.indices = self.kmeans.index.search(self.windows, 1)
         self.indices = self.indices.reshape(-1)
