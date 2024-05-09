@@ -37,10 +37,10 @@ SELECTION_METHODS = {
 CLASSIFIERS = {
     "Logistic Regression": (LogisticRegression, {"solver": "liblinear"}),
     "Linear SVM": (SVC, {"kernel": "linear"}),
-    "RBF SVM": (SVC, {"gamma": 2, "C": 1}),
-    "Gaussian Process": (GaussianProcessClassifier, {"kernel": 1.0 * RBF(1.0)}),
-    "QDA": (QuadraticDiscriminantAnalysis, {}),
-    "Decision Tree": (DecisionTreeClassifier, {"max_depth": 5}),
-    "Random Forest": (RandomForestClassifier, {"max_depth": 5, "n_estimators": 10}),
-    "Ada Boost": (AdaBoostClassifier, {"algorithm": "SAMME"}),
+    # "RBF SVM": (SVC, {"gamma": 2, "C": 1}),
+    # "Gaussian Process": (GaussianProcessClassifier, {"kernel": 1.0 * RBF(1.0)}),
+    # "QDA": (QuadraticDiscriminantAnalysis, {}),
+    # "Decision Tree": (DecisionTreeClassifier, {"max_depth": 5}),
+    # "Random Forest": (RandomForestClassifier, {"max_depth": 5, "n_estimators": 10}),
+    # "Ada Boost": (AdaBoostClassifier, {"algorithm": "SAMME"}),
 }

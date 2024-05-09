@@ -27,10 +27,10 @@ def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
     info['models'][model_name] = acc
 
 
-def transform_dataset(data: Data, method_name, info):
+def transform_dataset(data: Data, method_name, params, info):
     method = SELECTION_METHODS[method_name]
     start = perf_counter()
-    X_tr, y_train, X_te, y_test = _transform(data, method)
+    X_tr, y_train, X_te, y_test = _transform(data, method, params)
     end = perf_counter()
     elapsed_time = end - start
     num_shapelets = X_tr.shape[1]
