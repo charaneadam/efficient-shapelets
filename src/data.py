@@ -1,5 +1,4 @@
 import numpy as np
-from aeon.datasets import load_from_tsfile
 
 from src.exceptions import DatasetUnreadable
 
@@ -11,11 +10,9 @@ def get_dataset(
     train,
 ) -> tuple[np.ndarray, np.ndarray]:
     split = "TRAIN" if train else "TEST"
-    filepath = str(DATA_PATH / f"{dataset_name}/{dataset_name}_{split}.ts")
-    x, y = load_from_tsfile(filepath)
-    n_ts, _, ts_length = x.shape
-    x = x.reshape((n_ts, ts_length))
-    y = y.astype(int)
+    filepath = str(DATA_PATH / f"{dataset_name}/{dataset_name}_{split}.tsv")
+    data = np.genfromtxt(filepath, delimiter="\t")
+    x, y = data[:, 1:], data[:, 0].astype(int)
     return x, y
 
 

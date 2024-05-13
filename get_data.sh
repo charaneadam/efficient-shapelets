@@ -1,5 +1,6 @@
 #!/bin/sh
  
-curl http://www.timeseriesclassification.com/aeon-toolkit/Archives/Univariate2018_ts.zip -o Univariate2018_ts.zip
-unzip Univariate2018_ts.zip
-mv Univariate_ts data
+LINK=https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/UCRArchive_2018.zip
+curl $LINK -o data.zip 
+unzip -P someone data.zip
+mv UCRArchive_2018 data
