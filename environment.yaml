@@ -1,0 +1,14 @@
+name: testenv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - faiss
+  - numpy
+  - scipy
+  - scikit-learn
+  - pyts
+  - numba
+  - aeon
+
