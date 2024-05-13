@@ -1,7 +1,6 @@
 from multiprocessing import Pool
 from itertools import product
 import json
-import numpy as np
 from src.data import Data
 from src.exceptions import DatasetUnreadable
 from src.experiments.helpers import transform_dataset, classify_dataset
@@ -24,11 +23,8 @@ def run(dataset_name):
             f.write(f"Unreadable dataset: {dataset_name}\n")
         return
 
-    _, ts_length = data.X_train.shape
-    # lengths_percents = [p for p in np.arange(0.1, 0.66, 0.05)]
-    lengths_percents = [p for p in np.arange(0.1, 0.2, 0.05)]
-
-    # top_ks = [k for k in range(5, 100, 5)]
+    # Small combination of parameters for testing
+    lengths_percents = [p for p in range(10, 16, 5)]
     top_ks = [k for k in range(5, 10, 5)]
 
     list_params = params = product(lengths_percents, top_ks)
@@ -39,7 +35,6 @@ def run(dataset_name):
 
 
 if __name__ == "__main__":
-    # datasets = ["CBF", "GunPoint", "ArrowHead", "Beef", "BME"]
-    datasets = ["CBF"]
+    datasets = ["CBF", "GunPoint", "ArrowHead", "Beef", "BME"]
     with Pool(4) as p:
         p.map(run, datasets)

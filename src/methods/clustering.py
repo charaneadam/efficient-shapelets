@@ -6,13 +6,13 @@ import faiss
 
 
 class KmeansTransform:
-    def __init__(self, window_percentage=0.3, topk=50) -> None:
+    def __init__(self, window_percentage=30, topk=50) -> None:
         self.window_size: int
         self.kmeans = None
         self.ts_length: int
         self.y: np.ndarray
         self.k = topk
-        self.window_percentage: float = window_percentage
+        self.window_percentage: int = window_percentage
 
     def get_windows(self, X):
         """Return Z-Normalized sliding window, it assumes window_size is set.
@@ -26,7 +26,7 @@ class KmeansTransform:
         self.n_ts, self.ts_length = X.shape
         self.y = y
         self.labels = set(self.y)
-        self.window_size = int(self.ts_length * self.window_percentage)
+        self.window_size = int(self.ts_length * self.window_percentage/100)
         self.windows = self.get_windows(X)
         self.n_centroids = 512
         self.niter = 20
