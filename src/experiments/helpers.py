@@ -35,8 +35,11 @@ def transform_dataset(data: Data, method_name, params, info):
     num_shapelets = X_tr.shape[1]
     info["time"] = elapsed_time
     info["n_shapelets"] = num_shapelets
-    info["window_percentage"] = int(100 * params["window_percentage"])
-    info["topk"] = params["topk"]
+
+    optional_params = params.keys()
+    for optional_param in optional_params:
+        if optional_param in optional_params:
+            info[optional_param] = params[optional_param]
     return X_tr, y_train, X_te, y_test
 
 
