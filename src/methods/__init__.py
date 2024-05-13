@@ -6,7 +6,7 @@ from .clustering import KmeansTransform
 from .fss import FastShapeletSelectionTransform
 
 
-from src.helpers.exceptions import TransformationDoesNotExist
+from src.exceptions import TransformationDoesNotExist
 
 
 SELECTION_METHODS = {

@@ -2,9 +2,9 @@ from multiprocessing import Pool
 from itertools import product
 import json
 import numpy as np
-from src.helpers.data import Data
-from src.helpers.exceptions import DatasetUnreadable
-from src.helpers.main import transform_dataset, classify_dataset
+from src.data import Data
+from src.exceptions import DatasetUnreadable
+from src.experiments.helpers import transform_dataset, classify_dataset
 
 METHOD_NAME = "Kmeans"
 
@@ -21,24 +21,25 @@ def run(dataset_name):
         data = Data(dataset_name)
     except DatasetUnreadable:
         with open("problematic_datasets.txt", "a") as f:
-            f.write(f"Unreadable dataset: {dataset_name}")
+            f.write(f"Unreadable dataset: {dataset_name}\n")
         return
 
     _, ts_length = data.X_train.shape
-    lengths_percents = [p for p in np.arange(0.1, 0.66, 0.05)]
+    # lengths_percents = [p for p in np.arange(0.1, 0.66, 0.05)]
+    lengths_percents = [p for p in np.arange(0.1, 0.2, 0.05)]
 
     window_lengths = list(map(lambda x: int(x * ts_length), lengths_percents))
-    top_ks = [k for k in range(5, 100, 5)]
+    # top_ks = [k for k in range(5, 100, 5)]
+    top_ks = [k for k in range(5, 10, 5)]
     list_params = params = product(window_lengths, top_ks)
     list_params = [{"window_size": wl, "topk": k} for wl, k in params]
     res = [run_combination(data, params) for params in list_params]
-    for d, l in zip(res, lengths_percents):
-        d["length_percentage"] = int(l)
     with open(f"{dataset_name}.json", "w") as f:
         json.dump(res, f, indent=2)
 
 
 if __name__ == "__main__":
-    datasets = ["CBF", "GunPoint", "ArrowHead", "Beef", "BME"]
+    # datasets = ["CBF", "GunPoint", "ArrowHead", "Beef", "BME"]
+    datasets = ["CBF"]
     with Pool(4) as p:
         p.map(run, datasets)

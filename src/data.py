@@ -1,7 +1,7 @@
 import numpy as np
 from aeon.datasets import load_from_tsfile
 
-from src.helpers.exceptions import DatasetUnreadable
+from src.exceptions import DatasetUnreadable
 
 from .config import DATA_PATH
 

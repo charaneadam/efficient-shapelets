@@ -6,7 +6,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-from src.helpers.exceptions import ClassifierDoesNotExist
+from src.exceptions import ClassifierDoesNotExist
 
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
