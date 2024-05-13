@@ -3,6 +3,7 @@ from itertools import product
 import json
 import numpy as np
 from src.helpers.data import Data
+from src.helpers.exceptions import DatasetUnreadable
 from src.helpers.main import transform_dataset, classify_dataset
 
 METHOD_NAME = "Kmeans"
@@ -18,15 +19,11 @@ def run_combination(data, params):
 def run(dataset_name):
     try:
         data = Data(dataset_name)
-    except FileNotFoundError:
-        print()
+    except DatasetUnreadable:
         with open("problematic_datasets.txt", "a") as f:
-            f.write(f"Does not exist: {dataset_name}")
+            f.write(f"Unreadable dataset: {dataset_name}")
         return
-    except RuntimeError:
-        with open("problematic_datasets.txt", "a") as f:
-            f.write(f"Problem: {dataset_name}\n")
-        return
+
     _, ts_length = data.X_train.shape
     lengths_percents = [p for p in np.arange(0.1, 0.66, 0.05)]
 

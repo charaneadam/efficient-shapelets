@@ -1,6 +1,8 @@
 import numpy as np
 from aeon.datasets import load_from_tsfile
 
+from src.helpers.exceptions import DatasetUnreadable
+
 from .config import DATA_PATH
 
 
@@ -19,6 +21,9 @@ def get_dataset(
 
 class Data:
     def __init__(self, dataset_name):
-        self.dataset_name = dataset_name
-        self.X_train, self.y_train = get_dataset(dataset_name, train=True)
-        self.X_test, self.y_test = get_dataset(dataset_name, train=False)
+        try:
+            self.dataset_name = dataset_name
+            self.X_train, self.y_train = get_dataset(dataset_name, train=True)
+            self.X_test, self.y_test = get_dataset(dataset_name, train=False)
+        except:
+            raise DatasetUnreadable(dataset_name)
