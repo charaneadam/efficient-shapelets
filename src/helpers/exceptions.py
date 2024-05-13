@@ -10,7 +10,7 @@ class TransformationFailrue(Exception):
     pass
 
 
-class ClassificationDoesNotExist(Exception):
+class ClassifierDoesNotExist(Exception):
     pass
 
 
