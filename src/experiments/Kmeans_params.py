@@ -28,11 +28,11 @@ def run(dataset_name):
     # lengths_percents = [p for p in np.arange(0.1, 0.66, 0.05)]
     lengths_percents = [p for p in np.arange(0.1, 0.2, 0.05)]
 
-    window_lengths = list(map(lambda x: int(x * ts_length), lengths_percents))
     # top_ks = [k for k in range(5, 100, 5)]
     top_ks = [k for k in range(5, 10, 5)]
-    list_params = params = product(window_lengths, top_ks)
-    list_params = [{"window_size": wl, "topk": k} for wl, k in params]
+
+    list_params = params = product(lengths_percents, top_ks)
+    list_params = [{"window_percentage": wl, "topk": k} for wl, k in params]
     res = [run_combination(data, params) for params in list_params]
     with open(f"{dataset_name}.json", "w") as f:
         json.dump(res, f, indent=2)

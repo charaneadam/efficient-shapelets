@@ -35,6 +35,8 @@ def transform_dataset(data: Data, method_name, params, info):
     num_shapelets = X_tr.shape[1]
     info["time"] = elapsed_time
     info["n_shapelets"] = num_shapelets
+    info["window_percentage"] = int(100 * params["window_percentage"])
+    info["topk"] = params["topk"]
     return X_tr, y_train, X_te, y_test
 
 

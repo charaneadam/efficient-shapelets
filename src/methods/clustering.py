@@ -6,12 +6,13 @@ import faiss
 
 
 class KmeansTransform:
-    def __init__(self, window_size=30, topk=50) -> None:
-        self.window_size: int = window_size
+    def __init__(self, window_percentage=0.3, topk=50) -> None:
+        self.window_size: int
         self.kmeans = None
         self.ts_length: int
         self.y: np.ndarray
         self.k = topk
+        self.window_percentage: float = window_percentage
 
     def get_windows(self, X):
         """Return Z-Normalized sliding window, it assumes window_size is set.
@@ -25,31 +26,31 @@ class KmeansTransform:
         self.n_ts, self.ts_length = X.shape
         self.y = y
         self.labels = set(self.y)
+        self.window_size = int(self.ts_length * self.window_percentage)
         self.windows = self.get_windows(X)
         self.n_centroids = 512
         self.niter = 20
         self.verbose = True
 
     # def plus_plus(self):
-        # centroids = [self.windows[0]]
-        # for _ in range(1, self.n_centroids):
-            # dist_sq = np.array([min([np.inner(c-x,c-x) for c in centroids]) for x in self.windows])
-            # probs = dist_sq/dist_sq.sum()
-            # cumulative_probs = probs.cumsum()
-            # r = np.random.rand()
-            # i = 0
-            # for j, p in enumerate(cumulative_probs):
-                # if r < p:
-                    # i = j
-                    # break
-            # centroids.append(self.windows[i])
-        # return np.array(centroids)
+    # centroids = [self.windows[0]]
+    # for _ in range(1, self.n_centroids):
+    # dist_sq = np.array([min([np.inner(c-x,c-x) for c in centroids]) for x in self.windows])
+    # probs = dist_sq/dist_sq.sum()
+    # cumulative_probs = probs.cumsum()
+    # r = np.random.rand()
+    # i = 0
+    # for j, p in enumerate(cumulative_probs):
+    # if r < p:
+    # i = j
+    # break
+    # centroids.append(self.windows[i])
+    # return np.array(centroids)
 
     def _cluster(self):
         # centroids = self.plus_plus()
         self.kmeans = faiss.Kmeans(
-            self.window_size, self.n_centroids, niter=self.niter, 
-            verbose=self.verbose
+            self.window_size, self.n_centroids, niter=self.niter, verbose=self.verbose
         )
         self.kmeans.train(self.windows)
         # self.kmeans.train(self.windows, init_centroids=centroids)
