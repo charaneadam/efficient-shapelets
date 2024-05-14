@@ -1,5 +1,6 @@
 from time import perf_counter
 from sklearn.metrics import accuracy_score
+from src.exceptions import ClassificationFailure, TransformationFailrue
 from src.methods import SelectionMethod
 from src.classifiers import CLASSIFIERS, Classifier
 from src.data import Data
@@ -10,21 +11,28 @@ def _transform(data, method_name, method_params={}):
     y_train = data.y_train
     X_test = data.X_test
     y_test = data.y_test
-    method = SelectionMethod(method_name)
-    method.set_parameters(method_params)
-    method.fit(X_train, y_train)
+    try:
+        method = SelectionMethod(method_name)
+        method.set_parameters(method_params)
+        method.fit(X_train, y_train)
+        print("Here")
 
-    X_tr = method.transform(X_train)
-    X_te = method.transform(X_test)
-    return X_tr, y_train, X_te, y_test
+        X_tr = method.transform(X_train)
+        X_te = method.transform(X_test)
+        return X_tr, y_train, X_te, y_test
+    except:
+        raise TransformationFailrue
 
 
 def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
-    model = Classifier(model_name)
-    model.fit(X_tr, y_tr)
-    y_pred = model.predict(X_te)
-    acc = accuracy_score(y_pred, y_te)
-    info["models"][model_name] = acc
+    try:
+        model = Classifier(model_name)
+        model.fit(X_tr, y_tr)
+        y_pred = model.predict(X_te)
+        acc = accuracy_score(y_pred, y_te)
+        info["models"][model_name] = acc
+    except:
+        raise ClassificationFailure
 
 
 def transform_dataset(data: Data, method_name, params, info):

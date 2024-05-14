@@ -3,7 +3,7 @@ from itertools import product
 import json
 from src.config import RESULTS_PATH
 from src.data import Data, get_metadata
-from src.exceptions import DatasetUnreadable
+from src.exceptions import ClassificationFailure, DatasetUnreadable, TransformationFailrue
 from src.experiments.helpers import transform_dataset, classify_dataset
 
 METHOD_NAME = "Kmeans"
@@ -13,12 +13,24 @@ PROBLEMS_INFO = results_path / "problematic_datasets.txt"
 
 def run_combination(data, params):
     info = dict()
-    X_tr, y_tr, X_te, y_te = transform_dataset(data, METHOD_NAME, params, info)
-    classify_dataset(X_tr, y_tr, X_te, y_te, info)
+    
+    try:
+        X_tr, y_tr, X_te, y_te = transform_dataset(data, METHOD_NAME, params, info)
+        classify_dataset(X_tr, y_tr, X_te, y_te, info)
+    except TransformationFailrue:
+        with open(PROBLEMS_INFO, 'a') as f:
+            f.write(f"Transformation problem: {data.dataset_name}\n")
+    except ClassificationFailure:
+        with open(PROBLEMS_INFO, 'a') as f:
+            f.write(f"Classification problem: {data.dataset_name}\n")
+    except:
+        with open(PROBLEMS_INFO, 'a') as f:
+            f.write(f"Unknown problem: {data.dataset_name}\n")
+
     return info
 
 
-def run(dataset_name):
+def run(dataset_name, _test=True):
     try:
         data = Data(dataset_name)
     except DatasetUnreadable:
@@ -26,13 +38,20 @@ def run(dataset_name):
             f.write(f"Unreadable dataset: {dataset_name}\n")
         return
 
-    # Small combination of parameters for testing
-    lengths_percents = [p for p in range(10, 66, 5)]
-    top_ks = [k for k in range(5, 150, 5)]
+    if _test:
+        lengths_percents = [p for p in range(10, 16, 5)]
+        top_ks = [k for k in range(5, 11, 5)]
+    else:
+        lengths_percents = [p for p in range(10, 66, 5)]
+        top_ks = [k for k in range(5, 150, 5)]
 
     list_params = params = product(lengths_percents, top_ks)
     list_params = [{"window_percentage": wl, "topk": k} for wl, k in params]
-    res = [run_combination(data, params) for params in list_params]
+    res = []
+    for params in list_params:
+        res_dict = run_combination(data, params)
+        if len(res_dict):
+            res.append(res_dict)
 
     output_path = results_path / f"{dataset_name}.json"
     with open(output_path, "w") as f:
@@ -42,6 +61,7 @@ def run(dataset_name):
 if __name__ == "__main__":
     datasets_metadata = get_metadata()
     datasets = datasets_metadata.Name.values
+    datasets = ['CBF', "BME"]
     results_path.mkdir(parents=True, exist_ok=True)
-    with Pool(32) as p:
+    with Pool(2) as p:
         p.map(run, datasets)
