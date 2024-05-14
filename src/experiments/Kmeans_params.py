@@ -1,11 +1,14 @@
 from multiprocessing import Pool
 from itertools import product
 import json
-from src.data import Data
+from src.config import RESULTS_PATH
+from src.data import Data, get_metadata
 from src.exceptions import DatasetUnreadable
 from src.experiments.helpers import transform_dataset, classify_dataset
 
 METHOD_NAME = "Kmeans"
+results_path = RESULTS_PATH / "kmeans_parameters"
+PROBLEMS_INFO = results_path / "problematic_datasets.txt"
 
 
 def run_combination(data, params):
@@ -19,22 +22,26 @@ def run(dataset_name):
     try:
         data = Data(dataset_name)
     except DatasetUnreadable:
-        with open("problematic_datasets.txt", "a") as f:
+        with open(PROBLEMS_INFO, "a") as f:
             f.write(f"Unreadable dataset: {dataset_name}\n")
         return
 
     # Small combination of parameters for testing
-    lengths_percents = [p for p in range(10, 16, 5)]
-    top_ks = [k for k in range(5, 10, 5)]
+    lengths_percents = [p for p in range(10, 66, 5)]
+    top_ks = [k for k in range(5, 150, 5)]
 
     list_params = params = product(lengths_percents, top_ks)
     list_params = [{"window_percentage": wl, "topk": k} for wl, k in params]
     res = [run_combination(data, params) for params in list_params]
-    with open(f"{dataset_name}.json", "w") as f:
+
+    output_path = results_path / f"{dataset_name}.json"
+    with open(output_path, "w") as f:
         json.dump(res, f, indent=2)
 
 
 if __name__ == "__main__":
-    datasets = ["CBF", "GunPoint", "ArrowHead", "Beef", "BME"]
-    with Pool(4) as p:
+    datasets_metadata = get_metadata()
+    datasets = datasets_metadata.Name.values
+    results_path.mkdir(parents=True, exist_ok=True)
+    with Pool(32) as p:
         p.map(run, datasets)
