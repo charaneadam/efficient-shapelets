@@ -1,4 +1,4 @@
-name: testenv
+name: shapelets
 channels:
   - conda-forge
   - defaults
