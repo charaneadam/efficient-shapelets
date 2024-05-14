@@ -1,8 +1,9 @@
 import numpy as np
+import pandas as pd
 
 from src.exceptions import DatasetUnreadable
 
-from .config import DATA_PATH
+from .config import DATA_PATH, METADATA_PATH
 
 
 def get_dataset(
@@ -24,3 +25,15 @@ class Data:
             self.X_test, self.y_test = get_dataset(dataset_name, train=False)
         except:
             raise DatasetUnreadable(dataset_name)
+
+
+def get_metadata():
+    df = pd.read_csv(METADATA_PATH)
+    df.set_index("ID", inplace=True)
+    same_length_datasets = ~(df["Length"] == "Vary")
+    df = df[same_length_datasets]
+    df.loc[:, "Length"] = df["Length"].astype(int)
+    df.rename(columns={"Train ": "Train"}, inplace=True)
+    df["train_size"] = df["Train"] * df["Length"]
+    df.sort_values(by="train_size", inplace=True)
+    return df
