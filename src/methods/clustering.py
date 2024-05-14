@@ -28,7 +28,7 @@ class KmeansTransform:
         self.labels = set(self.y)
         self.window_size = int(self.ts_length * self.window_percentage/100)
         self.windows = self.get_windows(X)
-        self.n_centroids = min(512, self.windows.shape[0]/3)
+        self.n_centroids = min(500, self.windows.shape[0]//10)
         self.niter = 20
         self.verbose = True
 
