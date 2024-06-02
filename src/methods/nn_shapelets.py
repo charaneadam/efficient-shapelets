@@ -8,7 +8,8 @@ import faiss
 
 
 class NearestNeighborTransform:
-    def __init__(self, verbose=0, n_neighbors=10, window_size=30):
+    def __init__(self, verbose=0, n_neighbors=10, window_size=30, non_connected=False):
+        self.non_connected = non_connected
         self.window_size: int | None = None
         self.index = None
         self.X = None
@@ -83,7 +84,23 @@ class NearestNeighborTransform:
         sort_order = ["n_covered", "popularity", "distance"]
         asc = [False, False, True]
         df.sort_values(by=sort_order, ascending=asc, inplace=True)
+        df.loc[:, 'popularity'] /= self.n_neighbors
+        df = df[df.popularity > 0.4]
         self.df = df
+        if self.non_connected:
+            self.non_connected_components()
+
+    def non_connected_components(self):
+        visited = np.zeros(self.n_windows).astype(bool)
+        selected = []
+        for wid in self.df.index.values:
+            if visited[wid]:
+                continue
+            visited[wid] = True
+            selected.append(wid)
+            for nwid in self.indices[wid]:
+                visited[nwid] = True
+        self.df = self.df.loc[selected]
 
     def transform(self, X, k=None):
         if k is None:
