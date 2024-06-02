@@ -4,11 +4,14 @@ channels:
   - defaults
 dependencies:
   - python=3.9
-  - faiss
+  - numba
   - numpy
   - scipy
+  - faiss
   - scikit-learn
   - pyts
-  - numba
-  - aeon
+  - matplotlib
+  - seaborn
+  - streamlit
+  - jupyterlab
 
