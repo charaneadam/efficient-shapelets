@@ -3,7 +3,11 @@ from itertools import product
 import json
 from src.config import RESULTS_PATH
 from src.data import Data, get_metadata
-from src.exceptions import ClassificationFailure, DatasetUnreadable, TransformationFailrue
+from src.exceptions import (
+    ClassificationFailure,
+    DatasetUnreadable,
+    TransformationFailrue,
+)
 from src.experiments.helpers import transform_dataset, classify_dataset
 
 METHOD_NAME = "Kmeans"
@@ -13,18 +17,18 @@ PROBLEMS_INFO = results_path / "problematic_datasets.txt"
 
 def run_combination(data, params):
     info = dict()
-    
+
     try:
-        X_tr, y_tr, X_te, y_te = transform_dataset(data, METHOD_NAME, params, info)
-        classify_dataset(X_tr, y_tr, X_te, y_te, info)
+        transformed = transform_dataset(data, METHOD_NAME, params, info)
+        classify_dataset(*transformed, info)
     except TransformationFailrue:
-        with open(PROBLEMS_INFO, 'a') as f:
+        with open(PROBLEMS_INFO, "a") as f:
             f.write(f"Transformation problem: {data.dataset_name}\n")
     except ClassificationFailure:
-        with open(PROBLEMS_INFO, 'a') as f:
+        with open(PROBLEMS_INFO, "a") as f:
             f.write(f"Classification problem: {data.dataset_name}\n")
     except:
-        with open(PROBLEMS_INFO, 'a') as f:
+        with open(PROBLEMS_INFO, "a") as f:
             f.write(f"Unknown problem: {data.dataset_name}\n")
 
     return info
@@ -61,7 +65,7 @@ def run(dataset_name, _test=True):
 if __name__ == "__main__":
     datasets_metadata = get_metadata()
     datasets = datasets_metadata.Name.values
-    datasets = ['CBF', "BME"]
+    datasets = ["CBF", "BME"]
     results_path.mkdir(parents=True, exist_ok=True)
     with Pool(2) as p:
         p.map(run, datasets)

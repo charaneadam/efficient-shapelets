@@ -84,7 +84,7 @@ class NearestNeighborTransform:
         sort_order = ["n_covered", "popularity", "distance"]
         asc = [False, False, True]
         df.sort_values(by=sort_order, ascending=asc, inplace=True)
-        df.loc[:, 'popularity'] /= self.n_neighbors
+        df.loc[:, "popularity"] /= self.n_neighbors
         df = df[df.popularity > 0.4]
         self.df = df
         if self.non_connected:

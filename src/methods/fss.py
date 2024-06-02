@@ -320,7 +320,7 @@ class FastShapeletSelectionTransform:
         """
         shapelet_candidates = []
         if self.n_or_threshold is None:
-            self.n_or_threshold = int(X.shape[1]*0.05 + 2)
+            self.n_or_threshold = int(X.shape[1] * 0.05 + 2)
 
         # sample time series
         l_ts_samples = self._sample_ts_from_class(X)
