@@ -28,7 +28,7 @@ run_container(){
     --name $CONTAINER_NAME \
     -p 5432:5432 -p 8888:8888 -p 8501:8501 \
     -v $VOLUME_NAME:/var/lib/postgresql/data:z \
-    -v ./src:/code:z \
+    -v .:/code:z \
     -d $IMAGE_NAME
 }
 
