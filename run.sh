@@ -1,15 +1,9 @@
 #!/bin/sh
 
-METADATA=https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/DataSummary.csv
-DATA=https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/UCRArchive_2018.zip
-
-#curl $DATA -o data.zip
-#unzip -P someone data.zip
-
-
 METADATA_EXISTS=$(psql -h localhost -U postgres -d shapelets -t -c \
   "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='metadata';")
-if [[ "$METADATA_EXISTS" -eq 0 ]] then
+if [[ "$METADATA_EXISTS" -eq 0 ]]; then
+  METADATA=https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/DataSummary.csv
   curl $METADATA -o /tmp/metadata.csv
   cat /tmp/metadata.csv | \
     awk -F"," '{if ($7 != "Vary") print $1,$2,$3,$4,$5,$6,$7}' \
@@ -17,7 +11,7 @@ if [[ "$METADATA_EXISTS" -eq 0 ]] then
   psql -h localhost -U postgres -f /scripts/UCR.sql
 fi
 
-if [[ $1 == "jupyter" ]] then
+if [[ $1 == "jupyter" ]]; then
   if [[ "$(jupyter server list | grep 8888 | wc -l)" -eq 0 ]]; then
     nohup jupyter lab --allow-root \
       --NotebookApp.token='' --NotebookApp.password='' \
