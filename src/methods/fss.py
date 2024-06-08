@@ -2,10 +2,10 @@
 #
 # License: MIT
 
-import numpy
 import random
 from datetime import datetime
 from scipy.spatial.distance import cdist
+import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
 random.seed(datetime.now())
@@ -15,7 +15,7 @@ def argmin(iterable):
     return min(enumerate(iterable), key=lambda x: x[1])[0]
 
 
-class FastShapeletSelectionTransform:
+class FastShapeletCandidates:
     """
     Generate shapelet candidates according to [1].
     Parameters
@@ -34,10 +34,9 @@ class FastShapeletSelectionTransform:
       2016 IEEE 20th International Conference on Computer Supported Cooperative Work in Design (CSCWD).
     """
 
-    def __init__(self, n_lfdp_or_threshold=None, std_split=1.5):
+    def __init__(self, n_lfdp_or_threshold, std_split=1.5):
         self.n_or_threshold = n_lfdp_or_threshold
         self.std_split = std_split
-        self.candidates = None
 
     def _mean_over_ts(self, l_ts):
         """
@@ -307,7 +306,7 @@ class FastShapeletSelectionTransform:
                 l_shapelet_candidates.append(shapelet_candidate)
         return l_shapelet_candidates
 
-    def fit(self, X, y):
+    def transform(self, X):
         """
         Generate shapelet candidates according to the paper
         A Shapelet Selection Algorithm for Time Series Classification: New Directions
@@ -319,8 +318,6 @@ class FastShapeletSelectionTransform:
         :rtype:
         """
         shapelet_candidates = []
-        if self.n_or_threshold is None:
-            self.n_or_threshold = int(X.shape[1] * 0.05 + 2)
 
         # sample time series
         l_ts_samples = self._sample_ts_from_class(X)
@@ -331,7 +328,23 @@ class FastShapeletSelectionTransform:
             new_candidates = self._generate_shapelet_candidates_from_LFDPs(ts, lfdps)
             shapelet_candidates += new_candidates
 
-        self.candidates = shapelet_candidates
+        return shapelet_candidates
+
+
+class FastShapeletSelectionTransform:
+    def __init__(self, n_lfdp_or_threshold=None, std_split=1.5):
+        self._nlfdp = n_lfdp_or_threshold
+        self._stdsplit = std_split
+        self.candidates = []
+
+    def fit(self, X, y):
+        if self._nlfdp is None:
+            self._nlfdp = int(X.shape[1] * 0.05 + 2)
+        labels = list(set(y))
+        fss = FastShapeletCandidates(self._nlfdp, self._stdsplit)
+        self.candidates = []
+        for label in labels:
+            self.candidates.extend(fss.transform(X[y == label]))
 
     def transform(self, X):
         res = []
