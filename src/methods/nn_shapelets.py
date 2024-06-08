@@ -10,7 +10,6 @@ import faiss
 class NearestNeighborTransform:
     def __init__(self, verbose=0, n_neighbors=10, window_size=30, non_connected=False):
         self.non_connected = non_connected
-        self.window_size: int | None = None
         self.index = None
         self.X = None
         self.y = None
@@ -28,6 +27,7 @@ class NearestNeighborTransform:
     def _set_params(self, X, y):
         self.X, self.y = X, y
         self.n_ts, self.ts_length = X.shape
+        self.window_size = min(self.window_size, int(0.4 * self.X.shape[1]))
 
         if self.verbose:
             print(f"Window length: {self.window_size}")
@@ -40,7 +40,6 @@ class NearestNeighborTransform:
         self.index = faiss.IndexHNSWFlat(self.window_size, self.n_neighbors)
         self.index.add(self.windows)
 
-        self.window_size = min(self.window_size, int(0.4 * self.X.shape[1]))
         if self.verbose:
             print(f"# neighbors: {self.n_neighbors}")
 
@@ -104,7 +103,7 @@ class NearestNeighborTransform:
 
     def transform(self, X, k=None):
         if k is None:
-            k = self.k
+            k = self.topk
         self.selected = []
         lbls = set(self.y)
         for lbl in lbls:
