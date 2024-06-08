@@ -3,7 +3,6 @@ from .nn_shapelets import NearestNeighborTransform
 from .randomShapelets import RandomShapeletTransform, RandomDilatedShapeletTransform
 from .fss import FastShapeletSelectionTransform
 from .clustering import KmeansTransform
-from .fss import FastShapeletSelectionTransform
 
 
 from src.exceptions import TransformationDoesNotExist
@@ -26,7 +25,7 @@ class SelectionMethod:
         self.name: str = method_name
         self._alg = SELECTION_METHODS[method_name]
 
-    def set_parameters(self, params):
+    def set_parameters(self, params={}):
         self._alg = self._alg(**params)
 
     def fit(self, X, y):
