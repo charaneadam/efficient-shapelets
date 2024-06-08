@@ -14,4 +14,5 @@ dependencies:
   - seaborn
   - streamlit
   - jupyterlab
+  - peewee
 
