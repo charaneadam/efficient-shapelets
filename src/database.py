@@ -30,29 +30,28 @@ class MethodParameter(BaseModel):
     name = CharField()
     value = FloatField()
     runtime = DoubleField()
-    method = ForeignKeyField(Method, backref="params")
+    method = ForeignKeyField(Method, backref="parameters")
 
 
-class MethodShapeletsProperties(BaseModel):
+class MethodShapelets(BaseModel):
     length = IntegerField()
     number = IntegerField()
-    dataset = ForeignKeyField(Dataset, backref="models")
-    method = ForeignKeyField(Method, backref="model")
+    dataset = ForeignKeyField(Dataset, backref="shapelets_properties")
+    method = ForeignKeyField(Method, backref="shapelets_properties")
 
 
 class ModelClassification(BaseModel):
     model_name = CharField()
     accuracy = FloatField()
     f1 = FloatField()
-    dataset = ForeignKeyField(Dataset, backref="models")
-    method = ForeignKeyField(Method, backref="model")
+    method_shapelets = ForeignKeyField(MethodShapelets, backref="classifiers")
 
 
 TABLES = [
     Dataset,
     Method,
     MethodParameter,
-    MethodShapeletsProperties,
+    MethodShapelets,
     ModelClassification,
 ]
 
