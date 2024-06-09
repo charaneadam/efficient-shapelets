@@ -15,4 +15,5 @@ dependencies:
   - streamlit
   - jupyterlab
   - peewee
+  - psycopg2
 
