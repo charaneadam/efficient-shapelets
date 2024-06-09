@@ -31,8 +31,7 @@ RUN ln -s /micromamba/bin/micromamba /usr/bin/micromamba
 RUN echo 'eval "$(micromamba shell hook --shell=bash)"' > /root/.bashrc
 RUN echo "micromamba activate shapelets" >> /root/.bashrc
 
-# add UCR sql metadata importer and command runner to /scripts
-COPY UCR.sql /scripts/UCR.sql
+# add command runner to /scripts
 COPY run.sh /scripts/run.sh
 
 # Make /code default directory (to be mounted from the host)
