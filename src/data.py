@@ -20,10 +20,14 @@ def get_dataset(
 
 
 class Windows:
-    def __init__(self, window_size: int, skip_size: int):
-        self.size = window_size
-        self.skip = skip_size
-        self.windows_per_ts = None
+    def __init__(self, window_size: int, skip_size: int | None = None):
+        self.size: int = window_size
+        self.skip: int
+        self.windows_per_ts: int
+        if skip_size is None:
+            self.skip = int(0.25 * window_size)
+        else:
+            self.skip = skip_size
 
     def get_windows(self, X):
         res = sliding_window_view(X, window_shape=(1, self.size)).squeeze()
