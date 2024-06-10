@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from numpy.lib.stride_tricks import sliding_window_view
+from sklearn.preprocessing import StandardScaler
 
 from src.exceptions import DatasetUnreadable
 
@@ -15,6 +17,38 @@ def get_dataset(
     data = np.genfromtxt(filepath, delimiter="\t")
     x, y = data[:, 1:], data[:, 0].astype(int)
     return x, y
+
+
+class Windows:
+    def __init__(self, window_size: int, skip_size: int):
+        self.size = window_size
+        self.skip = skip_size
+        self.windows_per_ts = None
+
+    def get_windows(self, X):
+        res = sliding_window_view(X, window_shape=(1, self.size)).squeeze()
+        if self.skip > 1:
+            ts_length = X.shape[1]
+            # Indices of the windows that we keep from all the sliding windows.
+            selected = np.arange(0, ts_length - self.size + 1, self.skip)
+            res = res[:, selected, :]
+        # Windows have shape: (n_ts, n_windows, window_size)
+        self.windows_per_ts = res.shape[1]
+
+        # Below we reshape the array such that the shape becomes
+        # (n_ts * n_windows, window_size). This is the format that
+        # Kmeans and nearest neighbor algorithms expect.
+        res = res.reshape(-1, self.size)
+
+        # Z-normalize the windows
+        res = StandardScaler().fit_transform(res.T).T
+
+        return res
+
+    def get_ts_index_of_window(self, window_index):
+        # This method returns the index of the time series from which a
+        # window was extracted given its index. (indexing is 0-based ofc)
+        return window_index // self.windows_per_ts
 
 
 class Data:
