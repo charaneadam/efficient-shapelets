@@ -2,6 +2,10 @@ class DatasetUnreadable(Exception):
     pass
 
 
+class DataFailure(Exception):
+    pass
+
+
 class TransformationDoesNotExist(Exception):
     pass
 

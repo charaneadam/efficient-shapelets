@@ -3,7 +3,7 @@ import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
 from sklearn.preprocessing import StandardScaler
 
-from src.exceptions import DatasetUnreadable
+from src.exceptions import DataFailure, DatasetUnreadable
 
 from .config import DATA_PATH, METADATA_PATH
 
@@ -16,6 +16,9 @@ def get_dataset(
     filepath = str(DATA_PATH / f"{dataset_name}/{dataset_name}_{split}.tsv")
     data = np.genfromtxt(filepath, delimiter="\t")
     x, y = data[:, 1:], data[:, 0].astype(int)
+    if np.isnan(x).any():
+        raise DataFailure(f"{split.capitalize()} split of {dataset_name} has \
+        missing values.")
     return x, y
 
 

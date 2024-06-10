@@ -8,6 +8,8 @@ from scipy.spatial.distance import cdist
 import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
+from src.exceptions import TransformationFailrue
+
 random.seed(datetime.now())
 
 
@@ -345,6 +347,8 @@ class FastShapeletSelectionTransform:
         self.candidates = []
         for label in labels:
             self.candidates.extend(fss.transform(X[y == label]))
+        if len(self.candidates) == 0:
+            raise TransformationFailrue("No candidates found!")
 
     def transform(self, X):
         res = []
