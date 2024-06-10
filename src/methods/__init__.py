@@ -9,11 +9,11 @@ from src.exceptions import TransformationDoesNotExist
 
 
 SELECTION_METHODS = {
-    "Random dilated shapelets": RandomDilatedShapeletTransform,
-    "Random shapelets": RandomShapeletTransform,
-    "Learning shapelets": LearningShapeletsTransform,
-    "Fast Shapelet Selection": FastShapeletSelectionTransform,
-    "Nearest neighbor": NearestNeighborTransform,
+    "RandomDilatedShapelets": RandomDilatedShapeletTransform,
+    "RandomShapelets": RandomShapeletTransform,
+    "LearningShapelets": LearningShapeletsTransform,
+    "FastShapeletSelection": FastShapeletSelectionTransform,
+    "NearestNeighbor": NearestNeighborTransform,
     "Kmeans": KmeansTransform,
 }
 
