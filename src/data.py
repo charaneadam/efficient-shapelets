@@ -20,7 +20,7 @@ def get_dataset(
 
 
 class Windows:
-    def __init__(self, window_size: int, skip_size: int | None = None):
+    def __init__(self, window_size: int, skip_size=None):
         self.size: int = window_size
         self.skip: int
         self.windows_per_ts: int
