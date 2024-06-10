@@ -1,59 +1,41 @@
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
 from scipy.spatial.distance import cdist
-from sklearn.preprocessing import StandardScaler
 import faiss
+
+from src.data import Windows
 
 
 class KmeansTransform:
-    def __init__(self, window_percentage=30, topk=50) -> None:
+    def __init__(self, window_percentage=30, topk=50, niter=None) -> None:
         self.window_size: int
         self.kmeans = None
         self.ts_length: int
         self.y: np.ndarray
         self.k = topk
         self.window_percentage: int = window_percentage
-
-    def get_windows(self, X):
-        """Return Z-Normalized sliding window, it assumes window_size is set.
-        It does not set the windows itself, since it sets also test set.
-        """
-        windows = sliding_window_view(X, window_shape=self.window_size, axis=1)
-        windows = windows.reshape(-1, self.window_size).astype("float32")
-        return StandardScaler().fit_transform(windows.T).T
+        self.window_manager: Windows
+        self.niter = niter
 
     def _set_params(self, X, y):
+        if self.niter is None:
+            self.niter = 20
         self.n_ts, self.ts_length = X.shape
         self.y = y
         self.labels = set(self.y)
-        self.window_size = int(self.ts_length * self.window_percentage / 100)
-        self.windows = self.get_windows(X)
+        window_size = int(self.ts_length * self.window_percentage / 100)
+        self.window_manager = Windows(window_size)
+        self.windows = self.window_manager.get_windows(X)
         self.n_centroids = min(500, self.windows.shape[0] // 10)
-        self.niter = 20
         self.verbose = True
 
-    # def plus_plus(self):
-    # centroids = [self.windows[0]]
-    # for _ in range(1, self.n_centroids):
-    # dist_sq = np.array([min([np.inner(c-x,c-x) for c in centroids]) for x in self.windows])
-    # probs = dist_sq/dist_sq.sum()
-    # cumulative_probs = probs.cumsum()
-    # r = np.random.rand()
-    # i = 0
-    # for j, p in enumerate(cumulative_probs):
-    # if r < p:
-    # i = j
-    # break
-    # centroids.append(self.windows[i])
-    # return np.array(centroids)
-
     def _cluster(self):
-        # centroids = self.plus_plus()
         self.kmeans = faiss.Kmeans(
-            self.window_size, self.n_centroids, niter=self.niter, verbose=self.verbose
+            self.window_manager.size,
+            self.n_centroids,
+            niter=self.niter,
+            verbose=self.verbose,
         )
         self.kmeans.train(self.windows)
-        # self.kmeans.train(self.windows, init_centroids=centroids)
 
         self.dists, self.indices = self.kmeans.index.search(self.windows, 1)
         self.indices = self.indices.reshape(-1)
@@ -64,8 +46,7 @@ class KmeansTransform:
         self.shapelets_indices = []
 
     def _get_window_label(self, window_id):
-        number_of_windows_per_ts = self.ts_length - self.window_size + 1
-        ts_id = window_id // number_of_windows_per_ts
+        ts_id = self.window_manager.get_ts_index_of_window(window_id)
         label = self.y[ts_id]
         return label
 
@@ -94,7 +75,7 @@ class KmeansTransform:
         self._select_shapelets()
 
     def transform(self, X):
-        windows = self.get_windows(X)
+        windows = self.window_manager.get_windows(X)
         shapelets = self.windows[self.shapelets_indices]
         dists = cdist(windows, shapelets).reshape(
             X.shape[0], -1, len(self.shapelets_indices)
