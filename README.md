@@ -34,8 +34,18 @@ be created to store the database content outside the container, and the src
 directory will be mounted on the container (in /code), i.e., you can change 
 the code in src directory without the need to rebuild/rerun the container.
 
-- data: This module contains class Data, which takes as argument a dataset name,
-and loads train and test data.
+- storage: This module deals with the data, and the database
+    - data: Provides classes to get raw time series and generate sliding,
+    and hopping windows, as well as other necessary utilities.
+    - database: This module offer ORM models to be used in order to store and
+    fetch the results from the database,
+    - init_db: this script fetchs and inserts metadata about UCR into the
+    database, create the necessary tables, and optionally check for any missing
+    data in the time series from UCR.
+
+- benchmarks: This module contains scripts to benchmark the methods:
+    - Compare all methods with a set of default parameters
+    - Compare different combinations of Kmeans method
 
 - methods: This module contains methods to select shapelets. Each method is in
 its own class. Each class can have different arguments/hyperparameters, however,
@@ -48,21 +58,4 @@ every class should have at least two methods:
 parameters as well as a Classifier class that takes a classifier name as
 argument and contains two methods: fit and predict (same api as sklean).
 
-
 - exceptions.py: This module contains exceptions to be raised and used for logging.
-
-- main.py: This module is used to transform and classify datasets. It has two
-main methods:
-    - transform_dataset: takes an instance of Data, method_name, params, then 
-    transform the data given using the method specified using params.
-    It return train and test data (X_train, y_train, X_test, y_test).
-    - classify_dataset: This function takes (X_train, y_train, X_test, y_test)
-    and classify the dataset using the different classifiers in 
-    ***classifiers*** module.
-
-- experiments: This module contains scripts (should be run directly through main
-function as modules).
-    - methods_comparison: Transform the specified datasets with all shapelet
-    selection methods, and classify using all classifiers.
-    - Kmeans_params: This script run different combinations of window lengths 
-    and number of top shapelets to be selected, on all the selected datasets.
