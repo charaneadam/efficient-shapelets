@@ -1,3 +1,4 @@
+from src.exceptions import DataFailure
 from .database import (
     db,
     Dataset,
@@ -6,6 +7,7 @@ from .database import (
     Classification,
     DataTransformation,
 )
+from .data import get_dataset
 
 
 def init_ucr_metadata():
@@ -23,7 +25,13 @@ def init_ucr_metadata():
     names = ["data_type", "name", "train", "test", "n_classes", "length"]
     for row in df[cols].values:
         row[-1] = int(row[-1])
-        Dataset.create(**dict(zip(names, row)))
+        dataset = Dataset.create(**dict(zip(names, row)))
+        try:
+            get_dataset(dataset.name, train=True)
+            get_dataset(dataset.name, train=True)
+        except DataFailure:
+            dataset.missing_values = True
+            dataset.save()
 
 
 def insert_method_names():
