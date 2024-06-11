@@ -16,7 +16,7 @@ from src.storage.database import (
 from .data import get_dataset
 
 
-def init_ucr_metadata():
+def init_ucr_metadata(skip_ts_with_nan=False):
     import pandas as pd
 
     with db:
@@ -32,12 +32,13 @@ def init_ucr_metadata():
     for row in df[cols].values:
         row[-1] = int(row[-1])
         dataset = Dataset.create(**dict(zip(names, row)))
-        try:
-            get_dataset(dataset.name, train=True)
-            get_dataset(dataset.name, train=True)
-        except DataFailure:
-            dataset.missing_values = True
-            dataset.save()
+        if skip_ts_with_nan:
+            try:
+                get_dataset(dataset.name, train=True)
+                get_dataset(dataset.name, train=True)
+            except DataFailure:
+                dataset.missing_values = True
+                dataset.save()
 
 
 def insert_method_names():
@@ -82,5 +83,5 @@ def create_tables():
 
 
 if __name__ == "__main__":
-    # init_ucr_metadata()
+    init_ucr_metadata()
     create_tables()
