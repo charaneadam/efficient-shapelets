@@ -5,7 +5,7 @@ from src.config import RESULTS_PATH
 from src.storage.data import Data
 from src.exceptions import (
     ClassificationFailure,
-    DatasetUnreadable,
+    DataFailure,
     TransformationFailrue,
 )
 from src.experiments.helpers import transform_dataset, classify_dataset
@@ -37,7 +37,7 @@ def run_combination(data, params):
 def run(dataset_name, _test=True):
     try:
         data = Data(dataset_name)
-    except DatasetUnreadable:
+    except DataFailure:
         with open(PROBLEMS_INFO, "a") as f:
             f.write(f"Unreadable dataset: {dataset_name}\n")
         return

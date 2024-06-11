@@ -1,16 +1,16 @@
 from src.data import Data
 from src.experiments.helpers import transform_dataset, classify_dataset
 from src.methods import SELECTION_METHODS
-from src.exceptions import DatasetUnreadable
+from src.exceptions import DataFailure
 
 
 def run_dataset(dataset_name):
     dataset_info = dict()
     try:
         data = Data(dataset_name)
-    except DatasetUnreadable:
+    except DataFailure as msg:
         with open("problematic_datasets.txt", "a") as f:
-            f.write(f"Unreadable dataset: {dataset_name}\n")
+            f.write(f"Data Failure: {msg}\n")
         return
 
     for method_name in SELECTION_METHODS.keys():

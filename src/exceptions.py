@@ -1,20 +1,8 @@
-class DatasetUnreadable(Exception):
-    pass
-
-
 class DataFailure(Exception):
     pass
 
 
-class TransformationDoesNotExist(Exception):
-    pass
-
-
 class TransformationFailrue(Exception):
-    pass
-
-
-class ClassifierDoesNotExist(Exception):
     pass
 
 
