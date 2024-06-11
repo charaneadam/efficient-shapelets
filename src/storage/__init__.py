@@ -1,1 +1,7 @@
-from .database import Classifier, Classification, Dataset, DataTransformation
+from .database import (
+    Classifier,
+    Classification,
+    Dataset,
+    DataTransformation,
+    SelectionMethod,
+)

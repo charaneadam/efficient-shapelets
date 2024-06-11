@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import faiss
 
-from src.data import Windows
+from src.storage.data import Windows
 
 
 class KmeansTransform:
