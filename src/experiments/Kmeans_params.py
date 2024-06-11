@@ -2,7 +2,7 @@ from multiprocessing import Pool
 from itertools import product
 import json
 from src.config import RESULTS_PATH
-from src.data import Data, get_metadata
+from src.storage.data import Data
 from src.exceptions import (
     ClassificationFailure,
     DatasetUnreadable,
@@ -63,8 +63,6 @@ def run(dataset_name, _test=True):
 
 
 if __name__ == "__main__":
-    datasets_metadata = get_metadata()
-    datasets = datasets_metadata.Name.values
     datasets = ["CBF", "BME"]
     results_path.mkdir(parents=True, exist_ok=True)
     with Pool(2) as p:

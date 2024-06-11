@@ -2,7 +2,7 @@ from time import perf_counter
 from sklearn.metrics import accuracy_score, f1_score
 from src.methods import SelectionMethod
 from src.classifiers import CLASSIFIERS, Classifier
-from .data import Data
+from src.storage.data import Data
 
 
 def _transform(method, X_train, X_test):

@@ -3,7 +3,7 @@
 METADATA_EXISTS=$(psql -h localhost -U postgres -d shapelets -t -c \
   "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='dataset';")
 if [[ "$METADATA_EXISTS" -eq 0 ]]; then
-  python /code/src/database.py
+  python -m src.storage.init_db
 fi
 
 if [[ $1 == "jupyter" ]]; then

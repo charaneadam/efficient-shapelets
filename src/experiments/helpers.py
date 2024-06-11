@@ -3,7 +3,7 @@ from sklearn.metrics import accuracy_score
 from src.exceptions import ClassificationFailure, TransformationFailrue
 from src.methods import SelectionMethod
 from src.classifiers import CLASSIFIERS, Classifier
-from src.data import Data
+from src.storage.data import Data
 
 
 def _transform(data, method_name, method_params={}):
