@@ -11,10 +11,10 @@ from src.exceptions import DataFailure, TransformationFailrue, ClassificationFai
 
 from src.storage.data import Data
 
-from src.storage import Dataset as DBDataset
-from src.storage import Classifier as DBClassifier
-from src.storage import SelectionMethod as DBSelectionMethod
 from src.storage.database import (
+    SelectionMethod as DBSelectionMethod,
+    Classifier as DBClassifier,
+    Dataset as DBDataset,
     DataMethod,
     PrecisionRecall,
     Result,
