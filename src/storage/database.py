@@ -55,7 +55,13 @@ class Classification(BaseModel):
     data = ForeignKeyField(DataTransformation, backref="classifications")
 
 
+class LabelPrecRecall(BaseModel):
+    label = IntegerField()
+    precision = FloatField()
+    recall = FloatField()
+    classification = ForeignKeyField(Classification, backref="precs_recalls")
+
+
 class ClassificationProblem(BaseModel):
-    # classifier = ForeignKeyField(Classification, backref="problems")
     dataset = ForeignKeyField(Dataset, backref="classif_problems")
     method = ForeignKeyField(SelectionMethod, backref="classif_problems")

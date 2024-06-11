@@ -8,6 +8,7 @@ from .database import (
     Classifier,
     Classification,
     DataTransformation,
+    LabelPrecRecall
 )
 from .data import get_dataset
 
@@ -65,6 +66,7 @@ def create_tables():
         Classification,
         DataTransformationProblem,
         ClassificationProblem,
+        LabelPrecRecall
     ]
     db.drop_tables(TABLES)
     db.create_tables(TABLES)

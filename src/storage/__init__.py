@@ -6,4 +6,5 @@ from .database import (
     SelectionMethod,
     ClassificationProblem,
     DataTransformationProblem,
+    LabelPrecRecall
 )

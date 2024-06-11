@@ -1,5 +1,9 @@
 from time import perf_counter
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_recall_fscore_support as precision_recall,
+)
 from src.methods import SelectionMethod
 from src.classifiers import CLASSIFIERS, Classifier
 
@@ -14,6 +18,7 @@ from src.storage import DataTransformation as DBDataTransformation
 from src.storage import Classification as DBClassification
 from src.storage import ClassificationProblem as DBClassifProblem
 from src.storage import DataTransformationProblem as DBTransformProblem
+from src.storage import LabelPrecRecall as DBLabelPrecRecall
 
 
 def _transform(method, X_train, X_test):
@@ -47,12 +52,17 @@ def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
         f1 = f1_score(y_pred, y_te, average="weighted")
     else:
         f1 = f1_score(y_pred, y_te)
+    labels = list(set(y_tr))
+    precision, recall, _, _ = precision_recall(y_pred, y_te, labels=labels)
 
     info["models"][model_name] = {
         "fit_time": fit_time,
         "predict_time": predict_time,
         "accuracy": acc,
         "f1": f1,
+        "labels": labels,
+        "precision": precision,
+        "recall": recall,
     }
 
 
@@ -104,7 +114,7 @@ def save_transformation_from_bench(result, db_dataset, db_method):
 def save_models_from_bench(result, db_transformation):
     for classifier_name, content in result["models"].items():
         db_classifier = DBClassifier.get(DBClassifier.name == classifier_name)
-        DBClassification.create(
+        db_classification = DBClassification.create(
             accuracy=content["accuracy"],
             f1=content["f1"],
             train_time=content["fit_time"],
@@ -112,6 +122,15 @@ def save_models_from_bench(result, db_transformation):
             classifier=db_classifier,
             data=db_transformation,
         )
+        zipped = zip(content["labels"], content["precision"], content["recall"])
+        for label, prec, recall in zipped:
+            # print(label, prec, recall, db_classification.id)
+            DBLabelPrecRecall.create(
+                label=label,
+                precision=prec,
+                recall=recall,
+                classification=db_classification,
+            )
 
 
 def get_datasets_names(method):
