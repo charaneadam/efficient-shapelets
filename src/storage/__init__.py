@@ -1,10 +1,8 @@
 from .database import (
     Classifier,
-    Classification,
     Dataset,
-    DataTransformation,
+    TransformationInfo,
     SelectionMethod,
     ClassificationProblem,
     DataTransformationProblem,
-    LabelPrecRecall
 )

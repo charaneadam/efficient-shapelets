@@ -33,35 +33,55 @@ class Classifier(BaseModel):
     description = TextField(null=True)
 
 
-class DataTransformation(BaseModel):
+class KmeansParameters(BaseModel):
+    window_percentage = IntegerField()
+    topk = IntegerField()
+    n_centroids = IntegerField()
+    n_iter = IntegerField()
+
+
+class DataMethod(BaseModel):
+    dataset = ForeignKeyField(Dataset, backref="results")
+    method = ForeignKeyField(SelectionMethod, backref="results")
+    kmeans_param = ForeignKeyField(KmeansParameters, null=True, backref="results")
+
+
+class Result(BaseModel):
+    classifier = ForeignKeyField(Classifier, backref="results")
+    data_method = ForeignKeyField(DataMethod, backref="results")
+
+
+class TransformationInfo(BaseModel):
     fit_time = FloatField()
     transform_time = FloatField()
     n_shapelets = IntegerField()
-    dataset = ForeignKeyField(Dataset, backref="transformations")
-    method = ForeignKeyField(SelectionMethod, backref="transformations")
+    data_method = ForeignKeyField(DataMethod, backref="info")
 
 
-class DataTransformationProblem(BaseModel):
-    dataset = ForeignKeyField(Dataset, backref="transformations")
-    method = ForeignKeyField(SelectionMethod, backref="transformations")
-
-
-class Classification(BaseModel):
+class TimeAccF1(BaseModel):
     accuracy = FloatField()
     f1 = FloatField()
     train_time = FloatField()
     test_time = FloatField()
-    classifier = ForeignKeyField(Classifier, backref="classifications")
-    data = ForeignKeyField(DataTransformation, backref="classifications")
+    result = ForeignKeyField(Result, backref="acc_f1")
 
 
-class LabelPrecRecall(BaseModel):
+class PrecisionRecall(BaseModel):
     label = IntegerField()
     precision = FloatField()
     recall = FloatField()
-    classification = ForeignKeyField(Classification, backref="precs_recalls")
+    result = ForeignKeyField(Result, backref="prec_recall")
+
+
+class ClassificationKmeans(BaseModel):
+    result = ForeignKeyField(Result, backref="kmeans_params")
 
 
 class ClassificationProblem(BaseModel):
     dataset = ForeignKeyField(Dataset, backref="classif_problems")
     method = ForeignKeyField(SelectionMethod, backref="classif_problems")
+
+
+class DataTransformationProblem(BaseModel):
+    dataset = ForeignKeyField(Dataset, backref="transformations")
+    method = ForeignKeyField(SelectionMethod, backref="transformations")

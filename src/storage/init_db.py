@@ -1,14 +1,17 @@
 from src.exceptions import DataFailure
-from .database import (
+from src.storage.database import Dataset, SelectionMethod
+from src.storage.database import db
+from src.storage.database import (
+    ClassificationKmeans,
     ClassificationProblem,
-    DataTransformationProblem,
-    db,
-    Dataset,
-    SelectionMethod,
     Classifier,
-    Classification,
-    DataTransformation,
-    LabelPrecRecall
+    DataMethod,
+    DataTransformationProblem,
+    KmeansParameters,
+    Result,
+    TimeAccF1,
+    TransformationInfo,
+    PrecisionRecall
 )
 from .data import get_dataset
 
@@ -62,11 +65,15 @@ def create_tables():
     TABLES = [
         SelectionMethod,
         Classifier,
-        DataTransformation,
-        Classification,
+        KmeansParameters,
+        DataMethod,
+        Result,
+        TransformationInfo,
+        TimeAccF1,
+        PrecisionRecall,
+        ClassificationKmeans,
         DataTransformationProblem,
         ClassificationProblem,
-        LabelPrecRecall
     ]
     db.drop_tables(TABLES)
     db.create_tables(TABLES)
@@ -75,5 +82,5 @@ def create_tables():
 
 
 if __name__ == "__main__":
-    init_ucr_metadata()
+    # init_ucr_metadata()
     create_tables()

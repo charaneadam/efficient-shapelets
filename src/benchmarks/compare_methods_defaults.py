@@ -14,11 +14,13 @@ from src.storage.data import Data
 from src.storage import Dataset as DBDataset
 from src.storage import Classifier as DBClassifier
 from src.storage import SelectionMethod as DBSelectionMethod
-from src.storage import DataTransformation as DBDataTransformation
-from src.storage import Classification as DBClassification
-from src.storage import ClassificationProblem as DBClassifProblem
-from src.storage import DataTransformationProblem as DBTransformProblem
-from src.storage import LabelPrecRecall as DBLabelPrecRecall
+from src.storage.database import (
+    DataMethod,
+    PrecisionRecall,
+    Result,
+    TimeAccF1,
+    TransformationInfo,
+)
 
 
 def _transform(method, X_train, X_test):
@@ -34,9 +36,41 @@ def _fit(method_name, method_params, X_train, y_train):
     return method
 
 
-def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
-    model = Classifier(model_name)
+def _fit_method_time(method_name, params, X_train, y_train):
+    start = perf_counter()
+    method = _fit(method_name, params, X_train, y_train)
+    end = perf_counter()
+    fit_time = end - start
+    return method, fit_time
 
+
+def _transform_time(method, X_train, X_test):
+    start = perf_counter()
+    X_tr, X_te = _transform(method, X_train, X_test)
+    end = perf_counter()
+    transform_time = end - start
+    return X_tr, X_te, transform_time
+
+
+def transform_dataset(data: Data, method_name, params, data_method_id):
+    X_train, y_train, X_test = data.X_train, data.y_train, data.X_test
+    method, fit_time = _fit_method_time(method_name, params, X_train, y_train)
+    X_tr, X_te, transform_time = _transform_time(method, X_train, X_test)
+
+    num_shapelets = X_tr.shape[1]
+
+    TransformationInfo.create(
+        fit_time=fit_time,
+        transform_time=transform_time,
+        n_shapelets=num_shapelets,
+        data_method_id=data_method_id,
+    )
+
+    return X_tr, data.y_train, X_te, data.y_test
+
+
+def _get_time_and_predictions(model_name, X_tr, y_tr, X_te):
+    model = Classifier(model_name)
     start = perf_counter()
     model.fit(X_tr, y_tr)
     end = perf_counter()
@@ -47,90 +81,57 @@ def _classify(X_tr, y_tr, X_te, y_te, model_name, info):
     end = perf_counter()
     predict_time = end - start
 
+    return fit_time, predict_time, y_pred
+
+
+def _get_classif_metrics(y_pred, y_te):
     acc = accuracy_score(y_pred, y_te)
+
     if len(set(y_te)) > 2:
         f1 = f1_score(y_pred, y_te, average="weighted")
     else:
         f1 = f1_score(y_pred, y_te)
-    labels = list(set(y_tr))
+
+    labels = list(set(y_te))
     precision, recall, _, _ = precision_recall(y_pred, y_te, labels=labels)
 
-    info["models"][model_name] = {
-        "fit_time": fit_time,
-        "predict_time": predict_time,
-        "accuracy": acc,
-        "f1": f1,
-        "labels": labels,
-        "precision": precision,
-        "recall": recall,
-    }
+    return acc, f1, labels, precision, recall
 
 
-def transform_dataset(data: Data, method_name, params, info):
-    start = perf_counter()
-    method = _fit(method_name, params, data.X_train, data.y_train)
-    end = perf_counter()
-    fit_time = end - start
+def _classify_and_store(model_name, X_tr, y_tr, X_te, y_te, model_id, dmid):
 
-    start = perf_counter()
-    X_tr, X_te = _transform(method, data.X_train, data.X_test)
-    end = perf_counter()
-    transform_time = end - start
-
-    num_shapelets = X_tr.shape[1]
-    info["fit_time"] = fit_time
-    info["transform_time"] = transform_time
-    info["n_shapelets"] = num_shapelets
-    return X_tr, data.y_train, X_te, data.y_test
-
-
-def classify_dataset(X_tr, y_train, X_te, y_test, info):
-    info["models"] = dict()
-    for model_name in CLASSIFIERS.keys():
-        _classify(X_tr, y_train, X_te, y_test, model_name, info)
-
-
-def _benchmark_method_dataset(dataset_name, method_name, method_params={}):
-    print(f"\t{dataset_name} ... ", end="")
-    info = {}
-    data = Data(dataset_name)
-    X_tr, y_tr, X_te, y_te = transform_dataset(data, method_name, method_params, info)
-    classify_dataset(X_tr, y_tr, X_te, y_te, info)
-    print("done.")
-    return info
-
-
-def save_transformation_from_bench(result, db_dataset, db_method):
-    db_transformation = DBDataTransformation.create(
-        fit_time=result["fit_time"],
-        transform_time=result["transform_time"],
-        n_shapelets=result["n_shapelets"],
-        dataset=db_dataset,
-        method=db_method,
+    fit_time, predict_time, y_pred = _get_time_and_predictions(
+        model_name, X_tr, y_tr, X_te
     )
-    return db_transformation
+    acc, f1, labels, precision, recall = _get_classif_metrics(y_pred, y_te)
+
+    result = Result.create(classifier_id=model_id, data_method_id=dmid)
+
+    TimeAccF1.create(
+        accuracy=acc,
+        f1=f1,
+        train_time=fit_time,
+        test_time=predict_time,
+        result=result,
+    )
+    for l, p, r in zip(labels, precision, recall):
+        PrecisionRecall.create(label=l, precision=p, recall=r, result=result)
 
 
-def save_models_from_bench(result, db_transformation):
-    for classifier_name, content in result["models"].items():
-        db_classifier = DBClassifier.get(DBClassifier.name == classifier_name)
-        db_classification = DBClassification.create(
-            accuracy=content["accuracy"],
-            f1=content["f1"],
-            train_time=content["fit_time"],
-            test_time=content["predict_time"],
-            classifier=db_classifier,
-            data=db_transformation,
-        )
-        zipped = zip(content["labels"], content["precision"], content["recall"])
-        for label, prec, recall in zipped:
-            # print(label, prec, recall, db_classification.id)
-            DBLabelPrecRecall.create(
-                label=label,
-                precision=prec,
-                recall=recall,
-                classification=db_classification,
-            )
+def classify_dataset(X_tr, y_train, X_te, y_test, dmid):
+    for model_name in CLASSIFIERS.keys():
+        mid = DBClassifier.get(DBClassifier.name == model_name).id
+        _classify_and_store(model_name, X_tr, y_train, X_te, y_test, mid, dmid)
+
+
+def _benchmark_method_dataset(dataset, method, method_params={}):
+    print(f"\t{dataset.name} ... ", end="")
+    data = Data(dataset.name)
+
+    dmid = DataMethod.create(dataset=dataset, method=method).id
+    X_tr, y_tr, X_te, y_te = transform_dataset(data, method.name, method_params, dmid)
+    classify_dataset(X_tr, y_tr, X_te, y_te, dmid)
+    print("done.")
 
 
 def get_datasets_names(method):
@@ -155,29 +156,21 @@ def get_method_names():
 
 def benchmark_method(method_name, method_params={}):
     print(f"Benchmarking method: {method_name}")
-    db_method = DBSelectionMethod.get(DBSelectionMethod.name == method_name)
+    method = DBSelectionMethod.get(DBSelectionMethod.name == method_name)
+
     for dataset_name in get_datasets_names(method_name):
-        db_dataset = DBDataset.get(DBDataset.name == dataset_name)
+        dataset = DBDataset.get(DBDataset.name == dataset_name)
+
         try:
-            result = _benchmark_method_dataset(dataset_name, method_name, method_params)
+            result = _benchmark_method_dataset(dataset, method, method_params)
         except DataFailure as msg:
             print(f"Data failure: {msg}")
-            db_dataset.problematic = True
-            db_dataset.save()
+            dataset.problematic = True
+            dataset.save()
         except TransformationFailrue as msg:
             print(f"Transformation failure: {msg}")
-            DBTransformProblem.create(dataset=db_dataset, method=db_method)
         except ClassificationFailure as msg:
             print(f"Classification failure: {msg}")
-            save_transformation_from_bench(result, db_dataset, db_method)
-            DBClassifProblem.create(dataset=db_dataset, method=db_method)
-
-        else:
-            db_transformation = save_transformation_from_bench(
-                result, db_dataset, db_method
-            )
-            save_models_from_bench(result, db_transformation)
-    print("Done.")
 
 
 def benchmark_all():
