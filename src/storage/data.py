@@ -18,7 +18,7 @@ def get_dataset(
     except:
         raise DataFailure("Cannot open data file.")
     x, y = data[:, 1:], data[:, 0].astype(int)
-    if np.isnan(x).any():
+    if np.isnan(x).any() or np.isnan(y).any():
         raise DataFailure(
             f"{split.capitalize()} split of {dataset_name} has \
         missing values."
