@@ -20,6 +20,7 @@ class Dataset(BaseModel):
     n_classes = IntegerField()
     length = IntegerField()
     missing_values = BooleanField(default=False)
+    problematic = BooleanField(default=False)
 
 
 class SelectionMethod(BaseModel):
@@ -40,6 +41,11 @@ class DataTransformation(BaseModel):
     method = ForeignKeyField(SelectionMethod, backref="transformations")
 
 
+class DataTransformationProblem(BaseModel):
+    dataset = ForeignKeyField(Dataset, backref="transformations")
+    method = ForeignKeyField(SelectionMethod, backref="transformations")
+
+
 class Classification(BaseModel):
     accuracy = FloatField()
     f1 = FloatField()
@@ -47,3 +53,9 @@ class Classification(BaseModel):
     test_time = FloatField()
     classifier = ForeignKeyField(Classifier, backref="classifications")
     data = ForeignKeyField(DataTransformation, backref="classifications")
+
+
+class ClassificationProblem(BaseModel):
+    # classifier = ForeignKeyField(Classification, backref="problems")
+    dataset = ForeignKeyField(Dataset, backref="classif_problems")
+    method = ForeignKeyField(SelectionMethod, backref="classif_problems")
