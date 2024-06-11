@@ -162,7 +162,7 @@ def benchmark_method(method_name, method_params={}):
         dataset = DBDataset.get(DBDataset.name == dataset_name)
 
         try:
-            result = _benchmark_method_dataset(dataset, method, method_params)
+            _benchmark_method_dataset(dataset, method, method_params)
         except DataFailure as msg:
             print(f"Data failure: {msg}")
             dataset.problematic = True
