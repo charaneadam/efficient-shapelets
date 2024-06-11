@@ -5,7 +5,6 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-from src.exceptions import ClassifierDoesNotExist
 
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
@@ -30,8 +29,6 @@ DEFAULT_CLASSIFIERS_PARAMS = {
 
 class Classifier:
     def __init__(self, classifier_name):
-        if classifier_name not in CLASSIFIERS:
-            raise ClassifierDoesNotExist(classifier_name)
         self._alg = CLASSIFIERS[classifier_name]
         params = DEFAULT_CLASSIFIERS_PARAMS.get(classifier_name, {})
         self._alg = self._alg(**params)
