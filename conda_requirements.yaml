@@ -16,4 +16,4 @@ dependencies:
   - jupyterlab
   - peewee
   - psycopg2
-
+  - aeon

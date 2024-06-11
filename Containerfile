@@ -4,7 +4,7 @@ ENV POSTGRES_PASSWORD pass
 ENV POSTGRES_DB shapelets
 
 RUN apt-get -y update
-RUN apt-get -y install curl unzip procps bzip2 wget
+RUN apt-get -y install curl unzip procps bzip2 wget vim
 
 # Download and extract UCR archive in /data
 RUN mkdir /data
