@@ -4,4 +4,6 @@ from .database import (
     Dataset,
     DataTransformation,
     SelectionMethod,
+    ClassificationProblem,
+    DataTransformationProblem,
 )

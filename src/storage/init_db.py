@@ -1,5 +1,7 @@
 from src.exceptions import DataFailure
 from .database import (
+    ClassificationProblem,
+    DataTransformationProblem,
     db,
     Dataset,
     SelectionMethod,
@@ -56,7 +58,14 @@ def insert_classifiers_names():
 
 
 def create_tables():
-    TABLES = [SelectionMethod, Classifier, DataTransformation, Classification]
+    TABLES = [
+        SelectionMethod,
+        Classifier,
+        DataTransformation,
+        Classification,
+        DataTransformationProblem,
+        ClassificationProblem,
+    ]
     db.drop_tables(TABLES)
     db.create_tables(TABLES)
     insert_method_names()
