@@ -26,7 +26,7 @@ run_container(){
   build_image_if_not_exist
   podman run --replace --rm \
     --name $CONTAINER_NAME \
-    -p 5432:5432 -p 8888:8888 -p 8501:8501 \
+    -p 5432:5432 -p 8888:8888 -p 8501:8501 -p 8866:8866\
     -v $VOLUME_NAME:/var/lib/postgresql/data:z \
     -v .:/code:z \
     -d $IMAGE_NAME
