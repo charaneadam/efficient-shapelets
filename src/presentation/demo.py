@@ -1,17 +1,22 @@
+from time import perf_counter
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from itertools import chain
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+import seaborn as sns
 from src.presentation.utils import get_windows, silhouette
-from src.storage.data import Data
+from src.storage.data import Data, Windows
 
 
 class Demo:
-    def __init__(self, dataset_name, samples_per_class=3):
+    def __init__(self, dataset_name, samples_per_class=3, skip_size=1):
         self.name = dataset_name
         self._data = Data(dataset_name)
         self._n_ts, self.length = self._data.X_train.shape
-        self._labels = list(set(self._data.y_train))
+        self._labels = np.array(list(set(self._data.y_train)))
         self._n_labels = len(self._labels)
         self._n_samples = samples_per_class
         self._colors = list(mcolors.TABLEAU_COLORS.keys())
@@ -19,6 +24,8 @@ class Demo:
         self._window_size: int
         self._evaluated: bool
         self._silhouettes: list
+        self._skip_size = skip_size
+        self.windows_manager: Windows
 
         self.sample()
 
@@ -70,6 +77,7 @@ class Demo:
         total = self._n_samples * self._n_labels
         fig.suptitle(f"{self.name}: {total} samples from {self._n_labels} classes")
         fig.tight_layout()
+        return fig
 
     def _label_id(self, ts_id):
         return ts_id // self._n_samples
@@ -107,11 +115,15 @@ class Demo:
         self._silhouettes[ts_id // self._n_samples].append(silhouettes)
 
     def evaluate_windows(self, window_size):
+        start = perf_counter()
         self._silhouettes = [[] for _ in range(self._n_labels)]
         self._window_size = window_size
+        self.windows_manager = Windows(window_size, self._skip_size)
         for ts_id in range(self._n_samples * self._n_labels):
             self._evaluate_ts_candidates(ts_id)
         self._evaluated = True
+        end = perf_counter()
+        return end - start
 
     def evaluations_df(self, ts_id):
         ts_label_id = ts_id // self._n_samples
@@ -121,3 +133,57 @@ class Demo:
         )
         df.set_index("start_position", inplace=True)
         return df
+
+    def run_pca_kmeans(self):
+        X = self._data.X_train[list(chain.from_iterable(self._ts_sample))]
+        windows = self.windows_manager.get_windows(X)
+        self.pca_windows = PCA(n_components=2).fit_transform(windows)
+        ts_ids = (
+            np.array(
+                list(
+                    map(
+                        self.windows_manager.get_ts_index_of_window,
+                        np.arange(self.pca_windows.shape[0]),
+                    )
+                )
+            )
+            // self._n_samples
+        )
+        labels = np.array(self._labels)[np.array(ts_ids)]
+        self.km = KMeans(n_clusters=30, random_state=0, n_init="auto")
+        self.km.fit(self.pca_windows)
+        self.df = pd.DataFrame(
+            [self.pca_windows[:, 0], self.pca_windows[:, 1], labels],
+            index=["PC1", "PC2", "label"],
+        ).T
+        self.df["label"] = self.df.label.astype(int)
+
+    def kmeans_plot(self, with_labels=False):
+        fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+        if with_labels:
+            sns.scatterplot(
+                self.df,
+                x="PC1",
+                y="PC2",
+                hue="label",
+                palette=self._colors[: self._n_labels],
+                ax=ax,
+            )
+            sns.scatterplot(
+                x=self.km.cluster_centers_[:, 0],
+                y=self.km.cluster_centers_[:, 1],
+                c="black",
+                ax=ax,
+            )
+        else:
+            sns.scatterplot(self.df, x="PC1", y="PC2", c="grey", ax=ax)
+            sns.scatterplot(
+                x=self.km.cluster_centers_[:, 0],
+                y=self.km.cluster_centers_[:, 1],
+                c="red",
+                ax=ax,
+            )
+        fig.tight_layout()
+
+    def evaluate_centroids(self):
+        pass
