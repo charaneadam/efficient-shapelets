@@ -6,15 +6,19 @@ from src.storage.data import Windows
 
 
 class KmeansTransform:
-    def __init__(self, window_percentage=30, topk=50, niter=None) -> None:
+    def __init__(
+        self, window_size=None, topk=50, niter=None, skip_size=None
+    ) -> None:
+        # get rid of _window_size_perc.
         self.window_size: int
         self.kmeans = None
         self.ts_length: int
         self.y: np.ndarray
         self.k = topk
-        self.window_percentage: int = window_percentage
+        self._window_size_perc = window_size
         self.window_manager: Windows
         self.niter = niter
+        self.skip_size = skip_size
 
     def _set_params(self, X, y):
         if self.niter is None:
@@ -22,8 +26,20 @@ class KmeansTransform:
         self.n_ts, self.ts_length = X.shape
         self.y = y
         self.labels = set(self.y)
-        window_size = int(self.ts_length * self.window_percentage / 100)
-        self.window_manager = Windows(window_size)
+        if isinstance(self._window_size_perc, int):
+            window_size = self._window_size_perc
+        elif isinstance(self._window_size_perc, float):
+            window_size = int(self.ts_length * self._window_size_perc)
+        else:
+            self._window_size_perc = 0.3
+            window_size = int(self.ts_length * self._window_size_perc)
+        if isinstance(self.skip_size, int):
+            pass
+        elif isinstance(self.skip_size, float):
+            self.skip_size = int(self.skip_size * self.ts_length)
+        else:
+            self.skip_size = int(0.25 * self.ts_length)
+        self.window_manager = Windows(window_size, self.skip_size)
         self.windows = self.window_manager.get_windows(X)
         self.n_centroids = min(500, self.windows.shape[0] // 10)
         self.verbose = True
