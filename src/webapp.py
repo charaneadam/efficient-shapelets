@@ -47,14 +47,13 @@ dataset from the UCR archive, and selects a window size for the shapelet size,
 then all the subsequences will be evaluated using silhouette score by brute
 force (exact solution).
 
-After, the user choose a number of groups (centroids) to cluster the
-subsequences. After the clustering is done, we compute the silhouette score
-for every centroid.
+In the second step, the user choose a number of groups (centroids) to cluster 
+the subsequences. After the clustering is done, the silhouette score for 
+every centroid is reported.
 
 >We restrict the archive to datastes where the number of classes less than 7
 for convenient plots, and datasets where the length of the time series is less
 than 600 for ~~real~~ *reasonable* time interaction.
-
 """
 
 state = st.session_state
@@ -85,6 +84,11 @@ def demo():
     resample()
 
 
+def resample():
+    state.demo.sample()
+    state.evaluated = False
+
+
 def evaluate():
     evaluation_time = state.demo.evaluate_windows(state.window_size)
     state.evaluation_msg = f"""It took {evaluation_time:.2f}(s) to evaluate all
@@ -93,28 +97,27 @@ def evaluate():
     state.evaluated = True
 
 
-def resample():
-    state.demo.sample()
-    state.evaluated = False
-
-
 if "ucr_info" not in state:
     ucr_info()
 
 with st.sidebar:
     st.write("#### Table of contents")
 
-st.checkbox("Show UCR archive datasets summary", key="show_info", value=True)
-if state.show_info:
+if st.checkbox("Show UCR archive datasets summary", value=True):
     st.dataframe(state.ucr_info)
 
 st.selectbox(
     "Select dataset for demo", state.ucr_info.name, on_change=demo, key="dataset_name"
 )
 
-if "demo" not in state:
-    demo()
-st.button("Resample", on_click=resample, key="resample_btn")
+col1, col2 = st.columns([0.8, 0.2])
+with col1:
+    st.write(f"""The rest of the demo will be using the {state.n_ts} below.
+    You can reandomly select different ones by clicking the resample buttom 
+    on the right.""")
+with col2:
+    st.button("Resample", on_click=resample, key="resample_btn")
+
 st.pyplot(state.demo.plot_data())
 
 with st.form("slider_form"):
@@ -131,8 +134,6 @@ with st.form("slider_form"):
     submitted = st.form_submit_button("Evaluate")
     if submitted:
         evaluate()
-
-
 
 if state.evaluated:
     st.write(state.evaluation_msg)
