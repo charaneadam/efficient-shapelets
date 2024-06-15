@@ -134,7 +134,7 @@ class Demo:
         df.set_index("start_position", inplace=True)
         return df
 
-    def run_pca_kmeans(self):
+    def run_pca_kmeans(self, num_centroids):
         X = self._data.X_train[list(chain.from_iterable(self._ts_sample))]
         windows = self.windows_manager.get_windows(X)
         self.pca_windows = PCA(n_components=2).fit_transform(windows)
@@ -150,7 +150,7 @@ class Demo:
             // self._n_samples
         )
         labels = np.array(self._labels)[np.array(ts_ids)]
-        self.km = KMeans(n_clusters=30, random_state=0, n_init="auto")
+        self.km = KMeans(n_clusters=num_centroids, random_state=0, n_init="auto")
         self.km.fit(self.pca_windows)
         self.df = pd.DataFrame(
             [self.pca_windows[:, 0], self.pca_windows[:, 1], labels],
