@@ -93,7 +93,7 @@ def resample():
 
 
 def evaluate():
-    evaluation_time = state.demo.silhouette.evaluate_windows(state.window_size)
+    evaluation_time = state.demo.evaluate_windows(state.window_size)
     state.evaluation_msg = f"""It took {evaluation_time:.2f}(s) to evaluate all
     {state.n_ts * (state.ts_length - state.window_size + 1)} candidates of size
     {state.window_size} in the {state.n_ts} samples (of length {state.ts_length})."""
@@ -101,7 +101,7 @@ def evaluate():
 
 
 def cluster():
-    state.demo.pca_kmeans.run_pca_kmeans(state.n_centroids)
+    state.demo.run_pca_kmeans(state.n_centroids)
     state.clustered = True
 
 

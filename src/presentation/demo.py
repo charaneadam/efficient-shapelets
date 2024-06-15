@@ -87,7 +87,6 @@ class DemoSilhouette:
         self.data: DemoData = demo_data
         self._evaluated: bool
         self._silhouettes: list
-        self.windows_manager: Windows
 
     def get_same_and_different_ts(self, ts_id):
         same = []
@@ -107,10 +106,10 @@ class DemoSilhouette:
 
         return same, other
 
-    def _evaluate_ts_candidates(self, ts_id):
+    def _evaluate_ts_candidates(self, ts_id, window_size):
         same, different = self.get_same_and_different_ts(ts_id)
         ts = self.data._data.X_train[self.data._ts_idx(ts_id)]
-        windows = get_windows(ts, self._window_size)
+        windows = get_windows(ts, window_size)
         silhouettes = [
             (idx, silhouette(window, same, different))
             for idx, window in enumerate(windows)
@@ -121,11 +120,8 @@ class DemoSilhouette:
     def evaluate_windows(self, window_size):
         start = perf_counter()
         self._silhouettes = [[] for _ in range(self.data._n_labels)]
-        self._window_size = window_size
-        self.data._window_size = window_size
-        self.windows_manager = Windows(window_size, self.data._skip_size)
         for ts_id in range(self.data._n_samples * self.data._n_labels):
-            self._evaluate_ts_candidates(ts_id)
+            self._evaluate_ts_candidates(ts_id, window_size)
         self._evaluated = True
         end = perf_counter()
         return end - start
@@ -141,19 +137,20 @@ class DemoSilhouette:
 
 
 class PCAKMeans:
-    def __init__(self, silhouette):
+    def __init__(self, silhouette, n_centroids):
+        self.n_centroids = n_centroids
         self.silhouette = silhouette
         self.data = self.silhouette.data
 
-    def run_pca_kmeans(self, num_centroids):
+    def run_pca_kmeans(self, windows_manager):
         X = self.data._data.X_train[list(chain.from_iterable(self.data._ts_sample))]
-        windows = self.silhouette.windows_manager.get_windows(X)
+        windows = windows_manager.get_windows(X)
         self.pca_windows = PCA(n_components=2).fit_transform(windows)
         ts_ids = (
             np.array(
                 list(
                     map(
-                        self.silhouette.windows_manager.get_ts_index_of_window,
+                        windows_manager.get_ts_index_of_window,
                         np.arange(self.pca_windows.shape[0]),
                     )
                 )
@@ -161,7 +158,7 @@ class PCAKMeans:
             // self.data._n_samples
         )
         labels = np.array(self.data._labels)[np.array(ts_ids)]
-        self.km = KMeans(n_clusters=num_centroids, random_state=0, n_init="auto")
+        self.km = KMeans(n_clusters=self.n_centroids, random_state=0, n_init="auto")
         self.km.fit(self.pca_windows)
         self.df = pd.DataFrame(
             [self.pca_windows[:, 0], self.pca_windows[:, 1], labels],
@@ -202,7 +199,17 @@ class Demo:
     def __init__(self, dataset_name, samples_per_class=3, skip_size=1):
         self.data = DemoData(dataset_name, samples_per_class, skip_size)
         self.silhouette = DemoSilhouette(self.data)
-        self.pca_kmeans = PCAKMeans(self.silhouette)
+        self.windows: Windows
+        self.pca_kmeans: PCAKMeans
 
     def plot_data(self, plot_shapelets=False):
         return self.data.plot(plot_shapelets, self.silhouette._silhouettes)
+
+    def evaluate_windows(self, window_size):
+        self.windows = Windows(window_size)
+        self.data._window_size = window_size
+        return self.silhouette.evaluate_windows(window_size)
+
+    def run_pca_kmeans(self, n_centroids):
+        self.pca_kmeans = PCAKMeans(self.silhouette, n_centroids)
+        self.pca_kmeans.run_pca_kmeans(self.windows)
