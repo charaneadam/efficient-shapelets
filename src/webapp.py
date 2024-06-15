@@ -61,6 +61,8 @@ state = st.session_state
 
 if "evaluated" not in state:
     state.evaluated = False
+if "clustered" not in state:
+    state.clustered = False
 
 
 def ucr_info():
@@ -87,6 +89,7 @@ def demo():
 def resample():
     state.demo.sample()
     state.evaluated = False
+    state.clustered = False
 
 
 def evaluate():
@@ -95,6 +98,11 @@ def evaluate():
     {state.n_ts * (state.ts_length - state.window_size + 1)} candidates of size
     {state.window_size} in the {state.n_ts} samples (of length {state.ts_length})."""
     state.evaluated = True
+
+
+def cluster():
+    state.demo.run_pca_kmeans(state.n_centroids)
+    state.clustered = True
 
 
 if "ucr_info" not in state:
@@ -112,15 +120,17 @@ st.selectbox(
 
 col1, col2 = st.columns([0.8, 0.2])
 with col1:
-    st.write(f"""The rest of the demo will be using the {state.n_ts} below.
+    st.write(
+        f"""The rest of the demo will be using the {state.n_ts} below.
     You can reandomly select different ones by clicking the resample buttom 
-    on the right.""")
+    on the right."""
+    )
 with col2:
     st.button("Resample", on_click=resample, key="resample_btn")
 
 st.pyplot(state.demo.plot_data())
 
-with st.form("slider_form"):
+with st.form("window_size_form"):
     min_size = int(0.05 * state.ts_length)
     max_size = int(0.7 * state.ts_length)
     default_size = int(0.1 * state.ts_length)
@@ -133,6 +143,7 @@ with st.form("slider_form"):
     )
     submitted = st.form_submit_button("Evaluate")
     if submitted:
+        state.clustered = False
         evaluate()
 
 if state.evaluated:
@@ -157,3 +168,24 @@ if state.evaluated:
             index=[f"TS {i+1}" for i in range(state.n_ts)],
         )
     )
+
+
+    with st.form("cluster_form"):
+        min_size = state.demo._n_labels * 3
+        max_size = state.demo._n_samples * (state.ts_length - state.window_size + 1)
+        max_size = max_size // 10
+        default_size = min(state.demo._n_labels * 15, max_size)
+        st.slider(
+            "Select number of centroids in order to cluster the data",
+            min_size,
+            max_size,
+            default_size,
+            key="n_centroids",
+        )
+        submitted = st.form_submit_button("Cluster")
+        if submitted:
+            cluster()
+
+    if state.clustered:
+        st.checkbox("Show labels of the windows", value=False, key="show_labels")
+        st.pyplot(state.demo.kmeans_plot(with_labels=state.show_labels))
