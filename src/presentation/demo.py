@@ -136,7 +136,7 @@ class DemoSilhouette:
         return df
 
 
-class PCAKMeans:
+class DemoPCAKMeans:
     def __init__(self, silhouette, n_centroids):
         self.n_centroids = n_centroids
         self.silhouette = silhouette
@@ -195,21 +195,90 @@ class PCAKMeans:
         return fig
 
 
+class DemoKmeansSilhouette:
+    def __init__(self, demo_data, n_centroids):
+        self.n_centroids = n_centroids
+        self.data: DemoData = demo_data
+        self.km: KMeans
+
+    def get_same_and_different_ts(self, ts_label):
+        same = []
+        other = []
+        for label_id, label in enumerate(self.data._labels):
+            indices = self.data._ts_sample[label_id]
+            if label == ts_label:
+                same.extend(self.data._data.X_train[indices])
+            else:
+                other.extend(self.data._data.X_train[indices])
+
+        return same, other
+
+    def run_kmeans(self, windows_manager):
+        samples_indices = np.array(list(chain.from_iterable(self.data._ts_sample)))
+        X = self.data._data.X_train[samples_indices]
+        windows = windows_manager.get_windows(X)
+        self.km = KMeans(n_clusters=self.n_centroids, random_state=0, n_init="auto")
+        self.km.fit(windows)
+
+        windows_ts_indices = samples_indices[
+            list(map(windows_manager.get_ts_index_of_window, range(windows.shape[0])))
+        ]
+        windows_labels = self.data._data.y_train[windows_ts_indices]
+
+        centroids_info = []
+
+        for centroid_id in range(self.n_centroids):
+            centroid_windows_index = self.km.labels_ == centroid_id
+            centroid_windows_ids = np.where(centroid_windows_index)
+            centroid_windows_ts = windows_ts_indices[centroid_windows_ids]
+            centroid_windows_labels = windows_labels[centroid_windows_ids]
+            popularity = 0
+            population_size = 0
+            centroid_label = None
+            distinct_ts = 0
+            for label in self.data._labels:
+                index = centroid_windows_labels == label
+                pop = sum(index)
+                n_population = centroid_windows_labels.shape[0]
+                pop /= n_population
+                if pop > popularity:
+                    popularity = pop
+                    centroid_label = label
+                    distinct_ts = len(set(centroid_windows_ts[index]))
+                    population_size = n_population
+            same, other = self.get_same_and_different_ts(centroid_label)
+            centroid_silhouette = silhouette(
+                self.km.cluster_centers_[centroid_id], same, other
+            )
+            info = [centroid_silhouette, centroid_label, popularity, population_size, distinct_ts]
+            centroids_info.append(info)
+        cols = ["Silhouette", "Assigned label", "Popularity", "Population size", "Distinct TS"]
+        centroids_info = pd.DataFrame(centroids_info, columns=cols)
+        return centroids_info
+
+
 class Demo:
     def __init__(self, dataset_name, samples_per_class=3, skip_size=1):
         self.data = DemoData(dataset_name, samples_per_class, skip_size)
         self.silhouette = DemoSilhouette(self.data)
         self.windows: Windows
-        self.pca_kmeans: PCAKMeans
+        self.pca_kmeans: DemoPCAKMeans
+        self.kmeans_silhouette: DemoKmeansSilhouette
 
     def plot_data(self, plot_shapelets=False):
         return self.data.plot(plot_shapelets, self.silhouette._silhouettes)
 
     def evaluate_windows(self, window_size):
-        self.windows = Windows(window_size)
+        self.windows = Windows(window_size, skip_size=1)
         self.data._window_size = window_size
         return self.silhouette.evaluate_windows(window_size)
 
     def run_pca_kmeans(self, n_centroids):
-        self.pca_kmeans = PCAKMeans(self.silhouette, n_centroids)
+        self.pca_kmeans = DemoPCAKMeans(self.silhouette, n_centroids)
         self.pca_kmeans.run_pca_kmeans(self.windows)
+
+    def run_kmeans(self):
+        self.kmeans_silhouette = DemoKmeansSilhouette(
+            self.data, self.pca_kmeans.n_centroids
+        )
+        return self.kmeans_silhouette.run_kmeans(self.windows)

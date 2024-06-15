@@ -102,6 +102,7 @@ def evaluate():
 
 def cluster():
     state.demo.run_pca_kmeans(state.n_centroids)
+    state.centroids_df = state.demo.run_kmeans()
     state.clustered = True
 
 
@@ -159,12 +160,13 @@ if state.evaluated:
         pd.DataFrame(
             [
                 (
-                    state.demo.silhouette.evaluations_df(i).index[0],
+                    state.demo.data._labels[i // state.demo.data._n_samples],
                     state.demo.silhouette.evaluations_df(i).values[0][0],
+                    state.demo.silhouette.evaluations_df(i).index[0],
                 )
                 for i in range(state.n_ts)
             ],
-            columns=["Start position", "Silhouette score"],
+            columns=["Label", "Silhouette score", "Start position"],
             index=[f"TS {i+1}" for i in range(state.n_ts)],
         )
     )
@@ -191,3 +193,4 @@ if state.evaluated:
         st.checkbox("Show labels of the windows", value=False, key="show_labels")
 
         st.pyplot(state.demo.pca_kmeans.plot(with_labels=state.show_labels))
+        st.dataframe(state.centroids_df)
