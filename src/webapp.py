@@ -80,20 +80,20 @@ def ucr_info():
 
 def demo():
     state.demo = Demo(st.session_state.dataset_name)
-    state.ts_length = state.demo._data.X_train.shape[1]
-    state.n_ts = state.demo._n_samples * state.demo._n_labels
+    state.ts_length = state.demo.data._data.X_train.shape[1]
+    state.n_ts = state.demo.data._n_samples * state.demo.data._n_labels
     state.window_size = int(0.1 * state.ts_length)
     resample()
 
 
 def resample():
-    state.demo.sample()
+    state.demo.data.sample()
     state.evaluated = False
     state.clustered = False
 
 
 def evaluate():
-    evaluation_time = state.demo.evaluate_windows(state.window_size)
+    evaluation_time = state.demo.silhouette.evaluate_windows(state.window_size)
     state.evaluation_msg = f"""It took {evaluation_time:.2f}(s) to evaluate all
     {state.n_ts * (state.ts_length - state.window_size + 1)} candidates of size
     {state.window_size} in the {state.n_ts} samples (of length {state.ts_length})."""
@@ -101,7 +101,7 @@ def evaluate():
 
 
 def cluster():
-    state.demo.run_pca_kmeans(state.n_centroids)
+    state.demo.pca_kmeans.run_pca_kmeans(state.n_centroids)
     state.clustered = True
 
 
@@ -128,7 +128,7 @@ with col1:
 with col2:
     st.button("Resample", on_click=resample, key="resample_btn")
 
-st.pyplot(state.demo.plot_data())
+st.pyplot(state.demo.data.plot())
 
 with st.form("window_size_form"):
     min_size = int(0.05 * state.ts_length)
@@ -159,8 +159,8 @@ if state.evaluated:
         pd.DataFrame(
             [
                 (
-                    state.demo.evaluations_df(i).index[0],
-                    state.demo.evaluations_df(i).values[0][0],
+                    state.demo.silhouette.evaluations_df(i).index[0],
+                    state.demo.silhouette.evaluations_df(i).values[0][0],
                 )
                 for i in range(state.n_ts)
             ],
@@ -169,12 +169,13 @@ if state.evaluated:
         )
     )
 
-
     with st.form("cluster_form"):
-        min_size = state.demo._n_labels * 3
-        max_size = state.demo._n_samples * (state.ts_length - state.window_size + 1)
+        min_size = state.demo.data._n_labels * 3
+        max_size = state.demo.data._n_samples * (
+            state.ts_length - state.window_size + 1
+        )
         max_size = max_size // 10
-        default_size = min(state.demo._n_labels * 15, max_size)
+        default_size = min(state.demo.data._n_labels * 15, max_size)
         st.slider(
             "Select number of centroids in order to cluster the data",
             min_size,
@@ -188,4 +189,5 @@ if state.evaluated:
 
     if state.clustered:
         st.checkbox("Show labels of the windows", value=False, key="show_labels")
-        st.pyplot(state.demo.kmeans_plot(with_labels=state.show_labels))
+
+        st.pyplot(state.demo.pca_kmeans.plot(with_labels=state.show_labels))
