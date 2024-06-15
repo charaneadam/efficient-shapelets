@@ -16,7 +16,7 @@ if [[ $1 == "jupyter" ]]; then
   fi
 elif [[ $1 == "webapp" ]] then
   if [[ "$(ps -Al | grep streamlit | wc -l)" -eq 0 ]]; then
-    nohup webapp run /code/src/webapp.py &> webapp_nohup.out &
+    nohup python -m run src/webapp.py &> webapp_nohup.out &
   else
     echo "Webapp already running."
   fi
