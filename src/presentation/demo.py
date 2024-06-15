@@ -184,6 +184,7 @@ class Demo:
                 ax=ax,
             )
         fig.tight_layout()
+        return fig
 
     def evaluate_centroids(self):
         pass
