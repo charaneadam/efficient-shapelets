@@ -26,7 +26,7 @@ run_container(){
   build_image_if_not_exist
   podman run --replace --rm \
     --name $CONTAINER_NAME \
-    -p 8888:8888 -p 8501:8501 \
+    -p 5432:5432 -p 8888:8888 -p 8501:8501 \
     -v $VOLUME_NAME:/var/lib/postgresql/data:z \
     -v .:/code:z \
     -d $IMAGE_NAME
@@ -55,6 +55,8 @@ if [[ $# -ne 0 ]]; then
   elif [[ $1 == "run" ]]; then
     run_container_if_off
     podman exec $CONTAINER_NAME bash /scripts/run.sh $2
+  elif [[ $1 == "benchmark" ]]; then
+    podman exec $CONTAINER_NAME bash /scripts/run.sh $1
   else
     echo "Wrong argument, run using: ./container [start|stop|build|bash|psql|run]]"
   fi
