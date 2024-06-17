@@ -8,30 +8,25 @@ from src.storage.database import Dataset
 
 ## DOLAP summary
 Silhouette score is a good measure to evaluate time series shapelets. It has
-similar performance to alternatives (Information gain and F-statistic) but
-superior when the number of shapelets is small (Figure 3 in the paper shows an
-example where the accuracy of classification increases while the number of
-shapelets used to transform the data is increasing, whereas the accuracy when
-the data is transformed by shapelets selected using silhouette, is higher with
-small number of shapelets, but stays the same while the number of shapelets is
-increasing).
+similar classification performance to alternatives (Information gain and
+F-statistic)of but superior when the number of shapelets is small.
 
 ## Challenge
 Silhouette, as well as the other approaches, suffer from a computational
 problem in order to evaluate a subsequence:
 
 The score $s(S_l^c)$ for one subsequence $S$ of length $l$ and representing
-class $c$ requires the distance to all time series.
-For instance, the silhouette score for a shapelet $S_l$ is computed as
+class $c$ requires the computation of the distance to all other time series.
+For instance, the silhouette score for a shapelet $S_l^c$ is computed as
 
 $$s(S_l^c) = \\frac{b-a}{\max(a, b)}$$, where:
-- $b$: the average distance between the $S_l^c$ and time series
+- $b$: the average distance between $S_l^c$ and time series
 from classes different than $c$
 - $a$: the average distance between $S_l^c$ and time series from class $c$.
 
 The distance between a subsequence $S_l$ and a time series is the minimum
 distance between $S_l$ and all subsequences of length $l$ from the 
-time series).
+time series.
 
 ## Idea/Content of the extension
 Instead of directly evaluating every subsequence independently, which requires
@@ -117,7 +112,11 @@ if st.checkbox("Show UCR archive datasets summary", value=True):
     st.dataframe(state.ucr_info)
 
 st.selectbox(
-    "Select dataset for demo", state.ucr_info.name, on_change=demo, key="dataset_name"
+    label="Select dataset for demo",
+    options=state.ucr_info.name,
+    index=5,
+    on_change=demo,
+    key="dataset_name",
 )
 
 
@@ -187,10 +186,9 @@ if state.evaluated:
 
     "### Clustering"
 
-    
     """This section is the core contribution for Information systems extension.
     """
-    
+
     """
     We want to find subsequences, that have high silhouette score to consider
     as shapelets but without the need to compare each candidate with all other
@@ -213,7 +211,7 @@ if state.evaluated:
             state.ts_length - state.window_size + 1
         )
         max_size = max_size
-        default_size = min(state.demo.data._n_labels * 25, max_size//10)
+        default_size = min(state.demo.data._n_labels * 25, max_size // 10)
         st.slider(
             "Select number of centroids",
             min_size,
@@ -228,9 +226,60 @@ if state.evaluated:
     if state.clustered:
         """
         The figure below shows the first two principal components of the
-        subseuqnces (in grey) as well as the centroids.
+        subseuqnces as well as the centroids (red if the labels are not shown
+        and black otherwise).
         """
         st.checkbox("Show labels of the windows", value=False, key="show_labels")
 
         st.pyplot(state.demo.pca_kmeans.plot(with_labels=state.show_labels))
+        """The table below shows for every centroid it's silhouette score.
+        Notice that the silhouette score changes with the number of clusters
+        i.e. the higher the number of cluters the higher the sillhouette score.
+        """
+
+        """
+        The table also shows other statistics that have been computed before
+        the computation of the silhouette. The goal is to show that some
+        features, that can be cheaply obtained after clustering, can be good
+        indicators of the expected silhouette score of a centroid. This can
+        improve the running time, since once the clustering is done, we do not
+        have to evaluate every candidate to compute the silhouette score
+        """
+
+        """
+        The statistics are all based on the label of the subsequences, meaning,
+        if a subsequence have been extracted from a time series with label $c$,
+        then the label of the subsequence is $c$:
+        - Assigned label: the class of the majority of subsequences
+        - Popularity: the fraction of the majority class
+        - Population size: the total number of points assigfned to the cluster
+        - Distinct TS: How many distinct time series, the subsequences of the
+        majority class have been extracted from.
+        """
         st.dataframe(state.centroids_df)
+
+        """
+        Two important remarks:
+        1. The silhouette score for some classes might be higher than the
+        silhouette score found by brute force. Althought the brute force found
+        the best score, the search using brute force was restricted to only
+        subsequences in the dataset, but the centroids of KMeans are not points
+        from the dataset, but an average of the windows in the cluster.
+        2. The centroids with the highest silhouette score, are usually the
+        centroids where the popularity is high (1 or close to 1) and the number
+        of sitinct time series is maximal.
+
+        The first point is important for accuracy, since an average of windows
+        can avoid overfitting compared to selecting a specific window. However,
+        we lost an important property, the mean of windows is not interpretable
+        (unless all the windows in the cluster highlight the same phenomenon in
+        the dataset, then the mean naturally has the same interpretation). If
+        we insist on having a shapelet that is indeed part of the dataset, we
+        can change the clustering to use KMedoids instead of KMeans.
+
+        The second point is important for computation. Instead of evaluating
+        every cluster centroid (our candidates) which requires another 
+        $\mathcal{O}(KN)$, we can directly select the candidates without
+        evaluating based only on the distinct time series covered, popularity
+        and population size.
+        """
