@@ -227,7 +227,10 @@ if state.evaluated:
             cluster()
 
     if state.clustered:
-        """
+        f"""
+        It took {state.kmeans_runtime}(s) in order to cluster the subsequences
+        and compute the centroids statistics.
+
         The figure below shows the first two principal components of the
         subseuqnces as well as the centroids (red if the labels are not shown
         and black otherwise).
@@ -259,7 +262,7 @@ if state.evaluated:
         - Distinct TS: How many distinct time series, the subsequences of the
         majority class have been extracted from.
         """
-        st.dataframe(state.centroids_df)
+        st.dataframe(state.demo.kmeans_silhouette.centroids_info)
 
         """
         Two important remarks:

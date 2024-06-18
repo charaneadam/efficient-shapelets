@@ -200,6 +200,7 @@ class DemoKmeansSilhouette:
         self.n_centroids = n_centroids
         self.data: DemoData = demo_data
         self.km: KMeans
+        self.centroids_info: pd.DataFrame
 
     def get_same_and_different_ts(self, ts_label):
         same = []
@@ -214,6 +215,7 @@ class DemoKmeansSilhouette:
         return same, other
 
     def run_kmeans(self, windows_manager):
+        start = perf_counter()
         samples_indices = np.array(list(chain.from_iterable(self.data._ts_sample)))
         X = self.data._data.X_train[samples_indices]
         windows = windows_manager.get_windows(X)
@@ -250,11 +252,25 @@ class DemoKmeansSilhouette:
             centroid_silhouette = silhouette(
                 self.km.cluster_centers_[centroid_id], same, other
             )
-            info = [centroid_silhouette, centroid_label, popularity, population_size, distinct_ts]
+            info = [
+                centroid_silhouette,
+                centroid_label,
+                popularity,
+                population_size,
+                distinct_ts,
+            ]
             centroids_info.append(info)
-        cols = ["Silhouette", "Assigned label", "Popularity", "Population size", "Distinct TS"]
-        centroids_info = pd.DataFrame(centroids_info, columns=cols)
-        return centroids_info
+        cols = [
+            "Silhouette",
+            "Assigned label",
+            "Popularity",
+            "Population size",
+            "Distinct TS",
+        ]
+        self.centroids_info = pd.DataFrame(centroids_info, columns=cols)
+        end = perf_counter()
+        total_time = end - start
+        return total_time
 
 
 class Demo:
