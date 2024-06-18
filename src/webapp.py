@@ -1,10 +1,11 @@
+import random
 import streamlit as st
 import pandas as pd
 from src.presentation.demo import Demo
 from src.storage.database import Dataset
 
 """
-# Extension for Information Systems.
+# Extension for Information Systems
 
 ## DOLAP summary
 Silhouette score is a good measure to evaluate time series shapelets. It has
@@ -48,6 +49,7 @@ every centroid is reported.
 """
 
 state = st.session_state
+dataset_id = 0
 
 
 if "evaluated" not in state:
@@ -65,7 +67,8 @@ def ucr_info():
     cols = ["data_type", "name", "train", "test", "length", "n_classes"]
 
     state.ucr_info = pd.DataFrame(list(query.dicts()))[cols]
-    state.dataset_name = state.ucr_info.loc[0, "name"]
+    dataset_id = random.randint(0, state.ucr_info.shape[0])
+    state.dataset_name = state.ucr_info.loc[dataset_id, "name"]
     demo()
 
 
@@ -94,7 +97,7 @@ def evaluate():
 
 def cluster():
     state.demo.run_pca_kmeans(state.n_centroids)
-    state.centroids_df = state.demo.run_kmeans()
+    state.kmeans_runtime = state.demo.run_kmeans()
     state.clustered = True
 
 
@@ -114,7 +117,7 @@ if st.checkbox("Show UCR archive datasets summary", value=True):
 st.selectbox(
     label="Select dataset for demo",
     options=state.ucr_info.name,
-    index=5,
+    index=dataset_id,
     on_change=demo,
     key="dataset_name",
 )
