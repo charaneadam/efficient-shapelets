@@ -83,5 +83,5 @@ def create_tables():
 
 
 if __name__ == "__main__":
-    init_ucr_metadata()
+    init_ucr_metadata(skip_ts_with_nan=False)
     create_tables()
