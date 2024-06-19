@@ -16,7 +16,7 @@ from src.storage.database import (
 from .data import get_dataset
 
 
-def init_ucr_metadata(skip_ts_with_nan=False):
+def init_ucr_metadata(mark_ts_with_nan=False):
     import pandas as pd
 
     with db:
@@ -32,7 +32,7 @@ def init_ucr_metadata(skip_ts_with_nan=False):
     for row in df[cols].values:
         row[-1] = int(row[-1])
         dataset = Dataset.create(**dict(zip(names, row)))
-        if skip_ts_with_nan:
+        if mark_ts_with_nan:
             try:
                 get_dataset(dataset.name, train=True)
                 get_dataset(dataset.name, train=True)
@@ -83,5 +83,5 @@ def create_tables():
 
 
 if __name__ == "__main__":
-    init_ucr_metadata(skip_ts_with_nan=False)
+    init_ucr_metadata(mark_ts_with_nan=True)
     create_tables()
