@@ -55,7 +55,7 @@ class TransformationInfo(BaseModel):
     fit_time = FloatField()
     transform_time = FloatField()
     n_shapelets = IntegerField()
-    data_method = ForeignKeyField(DataMethod, backref="info")
+    data_method = ForeignKeyField(DataMethod, backref="transformation_info")
 
 
 class TimeAccF1(BaseModel):
@@ -85,3 +85,4 @@ class ClassificationProblem(BaseModel):
 class DataTransformationProblem(BaseModel):
     dataset = ForeignKeyField(Dataset, backref="transformations")
     method = ForeignKeyField(SelectionMethod, backref="transformations")
+
