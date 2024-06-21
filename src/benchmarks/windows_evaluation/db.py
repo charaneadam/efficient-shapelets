@@ -17,7 +17,7 @@ class WindowsEvaluation(BaseModel):
 
 class WindowSilhouette(BaseModel):
     silhouette = FloatField()
-    window = IntegerField()
+    window = IntegerField() # index of the window, or label if it is a centroid
     evaluation = ForeignKeyField(WindowsEvaluation, backref="windows")
 
 
@@ -29,7 +29,9 @@ def init_windows_tables(db):
     WindowsEvaluationAproach.create(name="Clustering")
 
 
-def save(dataset_name, method_name, window_size, skip_size, runtime, results):
+def save(
+    dataset_name, method_name, window_size, skip_size, runtime, results, labels=None
+):
     dataset_id = Dataset.get(Dataset.name == dataset_name)
     approach_id = WindowsEvaluationAproach.get(
         WindowsEvaluationAproach.name == method_name
@@ -41,12 +43,10 @@ def save(dataset_name, method_name, window_size, skip_size, runtime, results):
         approach=approach_id,
         runtime=runtime,
     ).execute()
+    if labels is None:
+        labels = np.arange(len(results))
     WindowSilhouette.insert_many(
-        list(
-            zip(
-                results, np.arange(len(results)), [windows_evaluation_id] * len(results)
-            )
-        ),
+        list(zip(results, labels, [windows_evaluation_id] * len(results))),
         fields=[
             WindowSilhouette.silhouette,
             WindowSilhouette.window,
