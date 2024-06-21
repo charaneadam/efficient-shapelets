@@ -41,9 +41,9 @@ class KmeansParameters(BaseModel):
 
 
 class DataMethod(BaseModel):
-    dataset = ForeignKeyField(Dataset, backref="results")
-    method = ForeignKeyField(SelectionMethod, backref="results")
-    kmeans_param = ForeignKeyField(KmeansParameters, null=True, backref="results")
+    dataset = ForeignKeyField(Dataset, backref="data_methods")
+    method = ForeignKeyField(SelectionMethod, backref="data_methods")
+    kmeans_param = ForeignKeyField(KmeansParameters, null=True, backref="data_methods")
 
 
 class Result(BaseModel):
