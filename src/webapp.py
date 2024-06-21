@@ -61,7 +61,7 @@ if "clustered" not in state:
 def ucr_info():
     query = Dataset.select().where(
         (Dataset.n_classes <= 10)
-        & (Dataset.length < 700)
+        # & (Dataset.length < 700)
         & (Dataset.missing_values == False)
     )
     cols = ["data_type", "name", "train", "test", "length", "n_classes"]
