@@ -13,7 +13,7 @@ from src.benchmarks.windows_evaluation.utils import (
 
 
 @njit(cache=True, fastmath=True, parallel=True)
-def _eval_silhouette_bruteforce(X, y, windows, windows_per_ts):
+def _eval_bruteforce(X, y, windows, windows_per_ts):
     n_windows = windows.shape[0]
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))# 6: 3 for sil,infogain,fstat, and 3 for time
@@ -61,7 +61,7 @@ def _eval_silhouette_bruteforce(X, y, windows, windows_per_ts):
 def bruteforce(data: Data, window_manager: Windows):
     windows = window_manager.get_windows(data.X_train)
     start = perf_counter()
-    results = _eval_silhouette_bruteforce(
+    results = _eval_bruteforce(
         data.X_train, data.y_train, windows, window_manager.windows_per_ts
     )
     end = perf_counter()
