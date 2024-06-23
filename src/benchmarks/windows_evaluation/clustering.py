@@ -6,6 +6,11 @@ import faiss
 from .db import save
 from .utils import distance_numba, silhouette, fstat, info_gain
 from src.storage.data import Data, Windows
+from src.benchmarks.get_experiment import (
+    get_approach_id,
+    get_datasets,
+    get_missing_window_size,
+)
 
 
 @njit(cache=True, fastmath=True)
@@ -95,10 +100,25 @@ def cluster(data: Data, window_manager: Windows):
     )
 
 
+def run_clustering():
+    datasets = get_datasets()
+    approach_id = get_approach_id("Clustering")
+    for dataset in datasets:
+        missing_sizes = get_missing_window_size(dataset, approach_id)
+        if len(missing_sizes) == 0:
+            continue
+        print(dataset, end=": ")
+        data = Data(dataset.name)
+        for window_size in missing_sizes:
+            print(window_size, end=", ")
+            window_skip = int(0.1 * window_size)
+            window_manager = Windows(window_size, window_skip)
+            try:
+                cluster(data, window_manager)
+            except:
+                print("error", end=", ")
+        print()
+
+
 if __name__ == "__main__":
-    dataset_name = "CBF"
-    data = Data(dataset_name)
-    windows_size = 40
-    window_skip = int(0.1 * windows_size)
-    window_manager = Windows(windows_size, window_skip)
-    cluster(data, window_manager)
+    run_clustering()
