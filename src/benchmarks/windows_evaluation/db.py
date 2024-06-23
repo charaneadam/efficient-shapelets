@@ -29,6 +29,7 @@ class WindowEvaluation(BaseModel):
 
 def init_windows_tables(db):
     TABLES = [WindowsEvaluationAproach, WindowEvaluation, WindowsEvaluation]
+    db.drop_tables(TABLES)
     db.create_tables(TABLES)
     WindowsEvaluationAproach.create(name="Bruteforce")
     WindowsEvaluationAproach.create(name="Clustering")

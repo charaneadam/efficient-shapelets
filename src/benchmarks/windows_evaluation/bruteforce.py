@@ -3,7 +3,7 @@ import numpy as np
 from numba import njit, prange, objmode
 
 from src.storage.data import Data, Windows
-from .db import save, init_windows_tables
+from .db import save
 from src.benchmarks.windows_evaluation.utils import (
     distance_numba,
     fstat,
@@ -76,10 +76,6 @@ def bruteforce(data: Data, window_manager: Windows):
 
 
 if __name__ == "__main__":
-    from src.storage.database import db
-
-    init_windows_tables(db)
-
     dataset_name = "CBF"
     data = Data(dataset_name)
     windows_size = 40
