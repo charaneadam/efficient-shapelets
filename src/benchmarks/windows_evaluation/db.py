@@ -1,5 +1,6 @@
 import numpy as np
-from src.storage.database import BaseModel, Dataset
+from src.storage.database import BaseModel
+from src.storage.data import Dataset
 from peewee import IntegerField, CharField, FloatField, ForeignKeyField
 
 
