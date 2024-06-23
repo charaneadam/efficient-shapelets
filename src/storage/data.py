@@ -3,8 +3,9 @@ from numpy.lib.stride_tricks import sliding_window_view
 from sklearn.preprocessing import StandardScaler
 
 from src.exceptions import DataFailure
-
 from src.config import DATA_PATH
+from src.storage.database import BaseModel
+from peewee import CharField, IntegerField, BooleanField
 
 
 def get_dataset(
@@ -68,3 +69,38 @@ class Data:
         self.X_train, self.y_train = get_dataset(dataset_name, train=True)
         self.X_test, self.y_test = get_dataset(dataset_name, train=False)
         self.n_ts, self.ts_length = self.X_train.shape
+
+
+class Dataset(BaseModel):
+    name = CharField(unique=True)
+    data_type = CharField()
+    train = IntegerField()
+    test = IntegerField()
+    n_classes = IntegerField()
+    length = IntegerField()
+    missing_values = BooleanField(default=False)
+    problematic = BooleanField(default=False)
+
+
+def init_ucr_metadata(db, mark_ts_with_nan=True):
+    import pandas as pd
+
+    with db:
+        Dataset.create_table()
+
+    df = pd.read_csv(
+        "https://www.cs.ucr.edu/~eamonn/time_series_data_2018/DataSummary.csv"
+    )
+    df = df[df.Length != "Vary"]
+    cols = ["Type", "Name", "Train ", "Test ", "Class", "Length"]
+    names = ["data_type", "name", "train", "test", "n_classes", "length"]
+    for row in df[cols].values:
+        row[-1] = int(row[-1])
+        dataset = Dataset.create(**dict(zip(names, row)))
+        if mark_ts_with_nan:
+            try:
+                get_dataset(dataset.name, train=True)
+                get_dataset(dataset.name, train=True)
+            except DataFailure:
+                dataset.missing_values = True
+                dataset.save()
