@@ -15,14 +15,19 @@ class WindowsEvaluation(BaseModel):
     runtime = FloatField()
 
 
-class WindowSilhouette(BaseModel):
+class WindowEvaluation(BaseModel):
     silhouette = FloatField()
-    window = IntegerField() # index of the window, or label if it is a centroid
+    silhouette_time = FloatField()
+    fstat = FloatField()
+    fstat_time = FloatField()
+    infogain = FloatField()
+    infogain_time = FloatField()
+    window = IntegerField()  # index of the window, or label if it is a centroid
     evaluation = ForeignKeyField(WindowsEvaluation, backref="windows")
 
 
 def init_windows_tables(db):
-    TABLES = [WindowsEvaluationAproach, WindowSilhouette, WindowsEvaluation]
+    TABLES = [WindowsEvaluationAproach, WindowEvaluation, WindowsEvaluation]
     db.drop_tables(TABLES)
     db.create_tables(TABLES)
     WindowsEvaluationAproach.create(name="Bruteforce")
@@ -45,11 +50,33 @@ def save(
     ).execute()
     if labels is None:
         labels = np.arange(len(results))
-    WindowSilhouette.insert_many(
-        list(zip(results, labels, [windows_evaluation_id] * len(results))),
+    silhouettes = results[:, 0]
+    silhouettes_time = results[:, 1]
+    fstats = results[:, 2]
+    fstats_time = results[:, 3]
+    infogains = results[:, 4]
+    infogains_time = results[:, 5]
+    WindowEvaluation.insert_many(
+        list(
+            zip(
+                silhouettes,
+                silhouettes_time,
+                fstats,
+                fstats_time,
+                infogains,
+                infogains_time,
+                labels,
+                [windows_evaluation_id] * len(results),
+            )
+        ),
         fields=[
-            WindowSilhouette.silhouette,
-            WindowSilhouette.window,
-            WindowSilhouette.evaluation,
+            WindowEvaluation.silhouette,
+            WindowEvaluation.silhouette_time,
+            WindowEvaluation.fstat,
+            WindowEvaluation.fstat_time,
+            WindowEvaluation.infogain,
+            WindowEvaluation.infogain_time,
+            WindowEvaluation.window,
+            WindowEvaluation.evaluation,
         ],
     ).execute()
