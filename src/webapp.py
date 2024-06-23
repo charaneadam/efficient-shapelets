@@ -2,7 +2,7 @@ import random
 import streamlit as st
 import pandas as pd
 from src.presentation.demo import Demo
-from src.storage.database import Dataset
+from src.storage.data import Dataset
 
 """
 # Extension for Information Systems
