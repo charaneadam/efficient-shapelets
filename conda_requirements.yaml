@@ -17,5 +17,3 @@ dependencies:
   - peewee
   - psycopg2
   - aeon
-  - jupyterlab_rise
-  - voila
