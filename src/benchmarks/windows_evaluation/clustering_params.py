@@ -2,7 +2,7 @@ from numba import njit
 import numpy as np
 from time import perf_counter
 import faiss
-from src.benchmarks.get_experiment import get_approach_id, get_datasets
+from src.benchmarks.get_experiment import get_datasets
 from src.storage.data import Data, Windows
 from .db import (
     init_clustering_tables,
@@ -12,7 +12,7 @@ from .clustering import assign_labels_to_clusters, _eval_clustering
 from src.benchmarks.get_experiment import get_missing_centroids
 
 
-# @njit(fastmath=True, cache=True, parallel=True)
+@njit(fastmath=True, cache=True, parallel=True)
 def centroids_info(y, indices, distances, centroids_labels, n_windows_per_ts):
     n_centroids = len(centroids_labels)
     info = np.zeros((n_centroids, 6))
