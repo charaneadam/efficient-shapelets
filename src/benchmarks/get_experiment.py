@@ -60,7 +60,7 @@ def get_missing_centroids(dataset):
         n_windows = int(n_ts * 0.9 * (ts_length - window_size + 1))
         min_centroids = n_windows // 50
         max_centroids = n_windows // 5
-        increase = max_centroids // min_centroids
+        increase = (max_centroids - min_centroids) // 10
         for n_centroids in np.arange(min_centroids, max_centroids, increase):
             if n_centroids in covered_centroids:
                 continue
