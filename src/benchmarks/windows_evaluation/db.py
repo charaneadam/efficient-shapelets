@@ -140,7 +140,7 @@ def save_clustering_parameters(
         cluster_time=clustering_time,
         evaluation_time=evaluation_time,
         info_time=info_time,
-    )
+    ).execute()
     silhouettes = centroids_evaluation[:, 0]
     silhouettes_time = centroids_evaluation[:, 1]
     fstats = centroids_evaluation[:, 2]
@@ -169,7 +169,8 @@ def save_clustering_parameters(
                 popularity,
                 distint_ts,
                 avg_dist_same,
-                avg_dist_diff[params_id] * len(silhouettes),
+                avg_dist_diff,
+                [params_id] * len(silhouettes),
             )
         ),
         fields=[

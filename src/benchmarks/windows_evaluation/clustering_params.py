@@ -9,18 +9,15 @@ from .db import (
     save_clustering_parameters,
 )
 from .clustering import assign_labels_to_clusters, _eval_clustering
+from src.benchmarks.get_experiment import get_missing_centroids
 
 
-def get_missing_centroids(dataset, approach_id):
-    return {}
-
-
-@njit(fastmath=True, cache=True, parallel=True)
+# @njit(fastmath=True, cache=True, parallel=True)
 def centroids_info(y, indices, distances, centroids_labels, n_windows_per_ts):
     n_centroids = len(centroids_labels)
     info = np.zeros((n_centroids, 6))
     for centroid_id in range(n_centroids):
-        windows_indices = np.where(indices == centroid_id)
+        windows_indices = np.where(indices == centroid_id)[0]
         windows_dists = distances[windows_indices]
         windows_ts_indices = windows_indices // n_windows_per_ts
         windows_labels = y[windows_ts_indices]
@@ -43,10 +40,12 @@ def centroids_info(y, indices, distances, centroids_labels, n_windows_per_ts):
     return info
 
 
-def cluster(data, window_manager, n_centroids, dataset, n_iterations=10):
+def cluster(data, window_manager: Windows, n_centroids):
     windows = window_manager.get_windows(data.X_train)
     start = perf_counter()
-    kmeans = faiss.Kmeans(window_manager.size, n_centroids, niter=n_iterations)
+    kmeans = faiss.Kmeans(
+        window_manager.size, int(n_centroids), niter=10, verbose=False
+    )
     kmeans.train(windows)
     dists, indices = kmeans.index.search(windows, 1)
     indices = indices.reshape(-1)
@@ -73,7 +72,7 @@ def cluster(data, window_manager, n_centroids, dataset, n_iterations=10):
         indices=indices,
         distances=dists,
         centroids_labels=centroids_labels,
-        n_windows_per_ts=window_manager.n_windows_per_ts,
+        n_windows_per_ts=window_manager.windows_per_ts,
     )
     end = perf_counter()
     centroids_info_time = end - start
@@ -81,15 +80,18 @@ def cluster(data, window_manager, n_centroids, dataset, n_iterations=10):
     return cluster_time, results, eval_time, info_results, centroids_info_time
 
 
+from src.exceptions import DataFailure
+
+
 def run():
     datasets = get_datasets()
-    approach_id = get_approach_id("Clustering")
     for dataset in datasets:
-        missing_centroids = get_missing_centroids(dataset, approach_id)
+        missing_centroids = get_missing_centroids(dataset)
         if len(missing_centroids) == 0:
             continue
         data = Data(dataset.name)
         for window_size in missing_centroids.keys():
+            print("\t", window_size, end=": ")
             window_skip = int(0.1 * window_size)
             window_manager = Windows(window_size, window_skip)
             for n_centroids in missing_centroids[window_size]:
@@ -100,22 +102,26 @@ def run():
                         eval_time,
                         info_results,
                         centroids_info_time,
-                    ) = cluster(data, window_manager, n_centroids, dataset)
+                    ) = cluster(data, window_manager, n_centroids)
                     save_clustering_parameters(
                         dataset=dataset,
                         window_size=window_size,
                         skip_size=window_skip,
-                        n_iterations=None,
+                        n_iterations=10,
                         clustering_time=cluster_time,
                         centroids_evaluation=results,
                         evaluation_time=eval_time,
                         centroids_info=info_results,
                         info_time=centroids_info_time,
                     )
-                except:
+                    print(n_centroids, end=", ")
+                except Exception as e:
                     print("error", end=", ")
+            print()
 
 
 if __name__ == "__main__":
-    from src.storage.database import db
-    init_clustering_tables(db)
+    # from src.storage.database import db
+
+    # init_clustering_tables(db)
+    run()
