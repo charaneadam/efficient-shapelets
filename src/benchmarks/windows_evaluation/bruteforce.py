@@ -17,7 +17,7 @@ from src.benchmarks.windows_evaluation.utils import (
 )
 
 
-@njit(cache=True, fastmath=True, parallel=True)
+@njit(fastmath=True, parallel=True)
 def _eval_bruteforce(X, y, windows, windows_per_ts):
     n_windows = windows.shape[0]
     n_ts = X.shape[0]
