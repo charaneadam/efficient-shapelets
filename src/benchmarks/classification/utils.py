@@ -6,7 +6,7 @@ from sklearn.metrics import (
 )
 from src.classifiers import CLASSIFIERS, Classifier
 from .db import ClassificationModel, ClassificationResult, ScoringMethod, TimeAccF1, PrecisionRecall
-from src.storage.database import db
+from src.storage.database import db_peewee
 
 
 def _get_time_and_predictions(model_name, X_tr, y_tr, X_te):
@@ -86,7 +86,7 @@ def insert_scoring_methods():
 
 def init_classification_tables():
     TABLES = [ClassificationModel, ClassificationResult, TimeAccF1, PrecisionRecall, ScoringMethod]
-    db.drop_tables(TABLES)
-    db.create_tables(TABLES)
+    db_peewee.drop_tables(TABLES)
+    db_peewee.create_tables(TABLES)
     insert_classifiers_names()
     insert_scoring_methods()
