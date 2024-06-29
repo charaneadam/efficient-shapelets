@@ -17,3 +17,4 @@ dependencies:
   - peewee
   - psycopg2
   - aeon
+  - sqlalchemy
