@@ -18,12 +18,32 @@ from src.benchmarks.windows_evaluation.utils import (
 
 
 @njit(fastmath=True, parallel=True)
-def _eval_bruteforce(X, y, windows, window_ts_ids):
-    n_windows = len(windows)
+def _eval_bruteforce(X, y, candidates, window_ts_ids):
+    """Computes the silhouette, fstat and infogain for every candidate as well
+    as the timing for each operation
+
+    Parameters
+    ----------
+    X : array_like of shape (n,m) where n is the number of the time series
+        and m is the length. All time series are assumed to be of same length.
+    y : array_like of shape(n,). Contains the labels of the time series X.
+    candidates : list of arrays. Every array is a candidate.
+    window_ts_ids: the id of the time series from which the candidate has been
+        extracted from.
+
+
+    Returns
+    -------
+    array of shape (K, 6) where K is the number of candidates.
+        Indices 0, 2 and 4 are the silhouette, fstat and infogain scores
+        respectively. Indices 1,3 and 5 are their corresponding timings.
+
+    """
+    n_windows = len(candidates)
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))  # 6: 3 for sil,infogain,fstat, and 3 for time
     for window_id in prange(n_windows):
-        window = windows[window_id]
+        window = candidates[window_id]
         window_ts_id = window_ts_ids[window_id]
         window_label = y[window_ts_id]
         dists_to_ts = np.zeros(n_ts)
