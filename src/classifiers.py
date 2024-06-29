@@ -16,6 +16,8 @@ CLASSIFIERS = {
     "Ada Boost": AdaBoostClassifier,
 }
 
+CLASSIFIERS_NAMES = sorted(list(CLASSIFIERS.keys()))
+
 DEFAULT_CLASSIFIERS_PARAMS = {
     "Logistic Regression": {"solver": "liblinear"},
     "Linear SVM": {"kernel": "linear"},
