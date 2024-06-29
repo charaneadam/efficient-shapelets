@@ -22,21 +22,21 @@ def _get_time_and_predictions(model_name, X_tr, y_tr, X_te):
     return fit_time, predict_time, y_pred
 
 
-def _get_classif_metrics(y_pred, y_te, labels):
+def _get_classif_metrics(y_pred, y_te):
     acc = accuracy_score(y_pred, y_te)
     if len(set(y_te)) > 2:
         f1 = f1_score(y_pred, y_te, average="weighted")
     else:
         f1 = f1_score(y_pred, y_te)
-    precision, recall, _, _ = precision_recall(y_pred, y_te, labels=labels)
-    return acc, f1, labels, precision, recall
+    precision, recall, _, _ = precision_recall(y_pred, y_te)
+    return acc, f1, None, precision, recall
 
 
-def _classify(model_name, X_tr, y_tr, X_te, y_te, labels):
+def _classify(model_name, X_tr, y_tr, X_te, y_te):
     fit_time, predict_time, y_pred = _get_time_and_predictions(
         model_name, X_tr, y_tr, X_te
     )
-    acc, f1, labels, precision, recall = _get_classif_metrics(y_pred, y_te, labels)
+    acc, f1, labels, precision, recall = _get_classif_metrics(y_pred, y_te)
     return fit_time, predict_time, acc, f1, labels, precision, recall
 
 
