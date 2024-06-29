@@ -18,13 +18,13 @@ from src.benchmarks.windows_evaluation.utils import (
 
 
 @njit(fastmath=True, parallel=True)
-def _eval_bruteforce(X, y, windows, windows_per_ts):
-    n_windows = windows.shape[0]
+def _eval_bruteforce(X, y, windows, window_ts_ids):
+    n_windows = len(windows)
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))  # 6: 3 for sil,infogain,fstat, and 3 for time
     for window_id in prange(n_windows):
         window = windows[window_id]
-        window_ts_id = window_id // windows_per_ts
+        window_ts_id = window_ts_ids[window_id]
         window_label = y[window_ts_id]
         dists_to_ts = np.zeros(n_ts)
         for ts_id in range(n_ts):
