@@ -1,6 +1,7 @@
 *.sql
 *.csv
 *.json
+.Trash*/
 
 *.ipynb
 .ipynb_checkpoints/
