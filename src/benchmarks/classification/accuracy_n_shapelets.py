@@ -4,8 +4,7 @@ import pandas as pd
 
 from src.benchmarks.get_experiment import get_datasets
 from src.benchmarks.windows_evaluation.bruteforce import _eval_bruteforce
-from src.benchmarks.classification.shapelets_evaluation_methods import transform
-from src.benchmarks.classification.utils import _classify
+from src.benchmarks.classification.utils import _classify, transform
 
 from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
@@ -117,7 +116,7 @@ def run():
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     for dataset in datasets:
-        if dataset.length < 100:
+        if dataset.length >= 100 or dataset.length < 60:
             continue
         try:
             results = compare(dataset.name)
