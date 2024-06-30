@@ -1,6 +1,6 @@
 import numpy as np
 from time import perf_counter
-from numba import njit, prange, objmode
+from numba import njit, objmode
 import faiss
 
 from .db import save
@@ -18,11 +18,11 @@ def _eval_clustering(X, y, windows, windows_labels):
     n_windows = windows.shape[0]
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))  # 6: 3 for sil,infogain,fstat, and 3 for time
-    for window_id in prange(n_windows):
+    for window_id in range(n_windows):
         window = windows[window_id]
         window_label = windows_labels[window_id]
         dists_to_ts = np.zeros(n_ts)
-        for ts_id in prange(n_ts):
+        for ts_id in range(n_ts):
             dists_to_ts[ts_id] = distance_numba(X[ts_id], window)
 
         with objmode(start="f8"):
@@ -59,7 +59,7 @@ def assign_labels_to_clusters(n_centroids, labels, windows_indices, y, windows_p
     count = np.zeros((n_centroids, len(labels)))
     labels_remap = dict(zip(labels, range(len(labels))))
     n_windows = windows_indices.shape[0]
-    for window_id in prange(n_windows):
+    for window_id in range(n_windows):
         centroid_id = windows_indices[window_id]
         count[centroid_id][labels_remap[y[(window_id // windows_per_ts)]]]
     return labels[count.argmax(axis=1)]
