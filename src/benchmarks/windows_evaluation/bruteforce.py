@@ -17,7 +17,7 @@ from src.benchmarks.windows_evaluation.utils import (
 )
 
 
-@njit(fastmath=True, parallel=True)
+@njit(fastmath=True)
 def _eval_bruteforce(X, y, candidates, window_ts_ids):
     """Computes the silhouette, fstat and infogain for every candidate as well
     as the timing for each operation

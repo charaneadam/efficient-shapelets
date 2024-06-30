@@ -12,7 +12,7 @@ from .clustering import assign_labels_to_clusters, _eval_clustering
 from src.benchmarks.get_experiment import get_missing_centroids
 
 
-@njit(fastmath=True, cache=True, parallel=True)
+@njit(fastmath=True, cache=True)
 def centroids_info(y, indices, distances, centroids_labels, n_windows_per_ts):
     n_centroids = len(centroids_labels)
     info = np.zeros((n_centroids, 6))
