@@ -1,4 +1,5 @@
 import warnings
+from numba import set_num_threads
 import numpy as np
 import pandas as pd
 
@@ -129,4 +130,5 @@ def run():
 
 
 if __name__ == "__main__":
+    set_num_threads(4)
     run()
