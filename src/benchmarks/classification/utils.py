@@ -1,11 +1,19 @@
 from time import perf_counter
+import numpy as np
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
     precision_recall_fscore_support as precision_recall,
 )
+from src.benchmarks.windows_evaluation.utils import distance_numba
 from src.classifiers import CLASSIFIERS, Classifier
-from .db import ClassificationModel, ClassificationResult, ScoringMethod, TimeAccF1, PrecisionRecall
+from .db import (
+    ClassificationModel,
+    ClassificationResult,
+    ScoringMethod,
+    TimeAccF1,
+    PrecisionRecall,
+)
 from src.storage.database import db_peewee
 
 
@@ -40,6 +48,24 @@ def _classify(model_name, X_tr, y_tr, X_te, y_te):
     return fit_time, predict_time, acc, f1, labels, precision, recall
 
 
+def _transform(X, shapelets):
+    n_ts = X.shape[0]
+    n_shapelets = len(shapelets)
+    trans = np.zeros((n_ts, n_shapelets))
+    for ts_id in range(n_ts):
+        ts = X[ts_id]
+        for shapelet_id in range(n_shapelets):
+            shapelet = shapelets[shapelet_id]
+            trans[ts_id, shapelet_id] = distance_numba(ts, shapelet)
+    return trans
+
+
+def transform(data, shapelets):
+    X_tr = _transform(data.X_train, shapelets)
+    X_te = _transform(data.X_test, shapelets)
+    return X_tr, X_te
+
+
 def _save(
     model_name,
     scoring_method_name,
@@ -62,7 +88,7 @@ def _save(
         top_K=k,
         model=model,
         windows_evaluation=windows_evaluation,
-        scoring_method = method
+        scoring_method=method,
     )
     TimeAccF1.create(
         accuracy=acc,
@@ -79,13 +105,21 @@ def insert_classifiers_names():
     for classifier_name in CLASSIFIERS.keys():
         ClassificationModel.create(name=classifier_name)
 
+
 def insert_scoring_methods():
     methods = ["silhouette", "fstat", "infogain"]
     for method in methods:
         ScoringMethod.insert(name=method).execute()
 
+
 def init_classification_tables():
-    TABLES = [ClassificationModel, ClassificationResult, TimeAccF1, PrecisionRecall, ScoringMethod]
+    TABLES = [
+        ClassificationModel,
+        ClassificationResult,
+        TimeAccF1,
+        PrecisionRecall,
+        ScoringMethod,
+    ]
     db_peewee.drop_tables(TABLES)
     db_peewee.create_tables(TABLES)
     insert_classifiers_names()
