@@ -115,8 +115,10 @@ def run():
 
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
+    current_df = pd.read_sql("accuracy_n_shapelets", engine)
+    computed = set(current_df.dataset.unique())
     for dataset in datasets:
-        if dataset.length >= 100 or dataset.length < 60:
+        if dataset.length < 60 or dataset.name in computed:
             continue
         try:
             results = compare(dataset.name)
