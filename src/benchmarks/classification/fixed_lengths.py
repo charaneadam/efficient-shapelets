@@ -7,6 +7,7 @@ from src.benchmarks.get_experiment import get_datasets
 from src.benchmarks.windows_evaluation.bruteforce import _eval_bruteforce
 from src.benchmarks.classification.utils import _classify, transform
 
+from src.storage.database import engine
 from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
 
@@ -26,6 +27,7 @@ def candidates_and_tsids(data, window_length):
     labels = list(set(data.y_train))
     candidates = []
     ids = []
+    positions = []
     for label in labels:
         ts_ids = np.where(data.y_train == label)[0]
         remaining = n_shapelets
@@ -37,6 +39,7 @@ def candidates_and_tsids(data, window_length):
                 )
                 candidate = data.X_train[ts_id][start_pos:end_pos]
                 candidate = (candidate - np.mean(candidate)) / np.std(candidate)
+                positions.append([data.dataset_name, ts_id, start_pos, window_length])
                 remaining -= 1
                 candidates.append(candidate)
                 ids.append(ts_id)
@@ -47,6 +50,8 @@ def candidates_and_tsids(data, window_length):
                 with a new sample, and keep repeating this process till
                 the number of candidates is satisfied"""
                 pass
+    df = pd.DataFrame(positions, columns=["dataset", "ts_id", "start", "length"])
+    df.to_sql("fixed_lengths_candidates", engine, if_exists="append", index=False)
     return candidates, ids
 
 
@@ -102,12 +107,12 @@ def compare(dataset_name, window_length):
 
 
 def run():
-    from src.storage.database import engine
-
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
+    current_df = pd.read_sql("fixed_lengths", engine)
+    computed = set(current_df.dataset.unique())
     for dataset in datasets:
-        if dataset.length < 60:
+        if dataset.length < 60 or dataset in computed:
             continue
         try:
             for window_perc in [0.05, 0.1, 0.2, 0.3, 0.5, 0.6]:
