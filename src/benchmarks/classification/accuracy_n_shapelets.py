@@ -40,7 +40,6 @@ def candidates_and_tsids(data):
     labels = list(set(data.y_train))
     candidates = []
     ids = []
-    positions = []
     for label in labels:
         ts_ids = np.where(data.y_train == label)[0]
         remaining = n_shapelets
@@ -50,10 +49,9 @@ def candidates_and_tsids(data):
                 start_pos, end_pos = sample_subsequence_positions(ts_length)
                 candidate = data.X_train[ts_id][start_pos:end_pos]
                 candidate = (candidate - np.mean(candidate)) / np.std(candidate)
-                positions.append([data.dataset_name, ts_id, start_pos, end_pos])
                 remaining -= 1
                 candidates.append(candidate)
-                ids.append(ts_id)
+                ids.append([ts_id, start_pos, end_pos])
             except:
                 """Failure sometimes happen when normalizing a candidate due to
                 numeric calculations failure (most of the time the standard
@@ -61,9 +59,7 @@ def candidates_and_tsids(data):
                 with a new sample, and keep repeating this process till
                 the number of candidates is satisfied"""
                 pass
-    df = pd.DataFrame(positions, columns=["dataset", "ts_id", "start", "end"])
-    df.to_sql("variable_lengths_candidates", engine, if_exists="append", index=False)
-    return candidates, ids
+    return candidates, np.array(ids)
 
 
 def evaluate(data, windows, windows_ts_ids):
@@ -103,8 +99,13 @@ def classify(df, windows, data, method, k):
 def compare(dataset_name):
     warnings.simplefilter("ignore")
     data = Data(dataset_name)
-    candidates, candidatests_ids = candidates_and_tsids(data)
-    df = evaluate(data, candidates, candidatests_ids)
+    candidates, candidates_info = candidates_and_tsids(data)
+    df = evaluate(data, candidates, candidates_info[:, 0])
+    df["dataset"] = dataset_name
+    df["ts_id"] = candidates_info[:, 0]
+    df["start"] = candidates_info[:, 1]
+    df["end"] = candidates_info[:, 2]
+    df.to_sql("variable_length_candidates", engine, if_exists="append", index=False)
     results = []
     for method in ["silhouette", "gain", "fstat"]:
         for K in [3, 5, 10, 20, 50, 100]:
@@ -121,7 +122,7 @@ def run():
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
-    TABLE_NAME = "accuracy_n_shapelets"
+    TABLE_NAME = "variable_lengths"
     if inspector.has_table(TABLE_NAME):
         current_df = pd.read_sql(TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
