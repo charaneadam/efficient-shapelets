@@ -8,6 +8,7 @@ from src.benchmarks.windows_evaluation.bruteforce import _eval_bruteforce
 from src.benchmarks.classification.utils import _classify, transform
 
 from src.storage.database import engine
+from sqlalchemy import inspect
 from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
 
@@ -109,8 +110,14 @@ def compare(dataset_name, window_length):
 def run():
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
-    current_df = pd.read_sql("fixed_lengths", engine)
-    computed = set(current_df.dataset.unique())
+
+    inspector = inspect(engine)
+    TABLE_NAME = "fixed_lengths"
+    if inspector.has_table(TABLE_NAME):
+        current_df = pd.read_sql("accuracy_n_shapelets", engine)
+        computed = set(current_df.dataset.unique())
+    else:
+        computed = set()
     for dataset in datasets:
         if dataset.length < 60 or dataset in computed:
             continue
@@ -120,7 +127,7 @@ def run():
                 results = compare(dataset.name, window_size)
                 df = pd.DataFrame(results, columns=columns)
                 df["window_size"] = window_size
-                df.to_sql("fixed_lengths", engine, if_exists="append", index=False)
+                df.to_sql(TABLE_NAME , engine, if_exists="append", index=False)
         except:
             print(f"Error happened with dataset {dataset.name}")
 
