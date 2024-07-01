@@ -62,7 +62,7 @@ def candidates_and_tsids(data):
                 the number of candidates is satisfied"""
                 pass
     df = pd.DataFrame(positions, columns=["dataset", "ts_id", "start", "end"])
-    df.to_sql("fixed_lengths_candidates", engine, if_exists="append", index=False)
+    df.to_sql("variable_lengths_candidates", engine, if_exists="append", index=False)
     return candidates, ids
 
 
