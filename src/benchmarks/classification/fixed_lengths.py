@@ -114,7 +114,7 @@ def run():
     inspector = inspect(engine)
     TABLE_NAME = "fixed_lengths"
     if inspector.has_table(TABLE_NAME):
-        current_df = pd.read_sql("accuracy_n_shapelets", engine)
+        current_df = pd.read_sql(TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
     else:
         computed = set()
