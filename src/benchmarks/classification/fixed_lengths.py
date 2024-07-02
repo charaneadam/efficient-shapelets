@@ -52,11 +52,11 @@ def candidates_and_tsids(data, window_length):
     return candidates, np.array(ids)
 
 
-def evaluate(data, windows, windows_ts_ids):
+def evaluate(data, windows, windows_ts_ids, normalize_by_length=False):
     """Given data, windows and their corresponding ts_ids from which they have
     been extracted; this function return a dataframe with the scores,
     their timings, as well as the label of each window"""
-    results = _eval_bruteforce(data.X_train, data.y_train, windows, windows_ts_ids)
+    results = _eval_bruteforce(data.X_train, data.y_train, windows, windows_ts_ids, normalize_by_length)
     cols = ["silhouette", "silhouette_time", "fstat", "fstat_time", "gain", "gain_time"]
     df = pd.DataFrame(results, columns=cols)
     windows_labels = data.y_train[windows_ts_ids]
@@ -86,11 +86,11 @@ def classify(df, windows, data, method, k):
     return accuracies
 
 
-def compare(dataset_name, window_length):
+def compare(dataset_name, window_length, normalize_by_length=False):
     warnings.simplefilter("ignore")
     data = Data(dataset_name)
     candidates, candidates_info = candidates_and_tsids(data, window_length)
-    df = evaluate(data, candidates, candidates_info[:,0])
+    df = evaluate(data, candidates, candidates_info[:,0], normalize_by_length)
     df["dataset"] = dataset_name
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
@@ -109,7 +109,7 @@ def compare(dataset_name, window_length):
     return results
 
 
-def run():
+def run(normalize_by_length=False):
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
 
@@ -126,7 +126,7 @@ def run():
         try:
             for window_perc in [0.05, 0.1, 0.2, 0.3, 0.5, 0.6]:
                 window_size = int(window_perc * dataset.length)
-                results = compare(dataset.name, window_size)
+                results = compare(dataset.name, window_size, normalize_by_length)
                 df = pd.DataFrame(results, columns=columns)
                 df["window_size"] = window_size
                 df.to_sql(TABLE_NAME , engine, if_exists="append", index=False)

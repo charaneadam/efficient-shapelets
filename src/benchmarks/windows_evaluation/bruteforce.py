@@ -18,7 +18,7 @@ from src.benchmarks.windows_evaluation.utils import (
 
 
 @njit(fastmath=True)
-def _eval_bruteforce(X, y, candidates, window_ts_ids):
+def _eval_bruteforce(X, y, candidates, window_ts_ids, normalize_by_length=False):
     """Computes the silhouette, fstat and infogain for every candidate as well
     as the timing for each operation
 
@@ -51,6 +51,8 @@ def _eval_bruteforce(X, y, candidates, window_ts_ids):
             if window_ts_id == ts_id:
                 continue
             dist = distance_numba(X[ts_id], window)
+            if normalize_by_length:
+                dist /= len(window)# Should we use sqrt of n?
             dists_to_ts[ts_id] = dist
 
         with objmode(start="f8"):
