@@ -57,35 +57,32 @@ def compare(dataset_name):
     for method in ["silhouette", "gain", "fstat"]:
         for K in [3, 5, 10, 20, 50, 100]:
             accuracies = classify(df, data, method, K)
-            models_accuracies = [
-                accuracies.get(clf_name, None) for clf_name in CLASSIFIERS_NAMES
-            ]
-            result = [dataset_name, method, K] + models_accuracies
+            result = [dataset_name, method, K]
+            result += [accuracies.get(clf, None) for clf in CLASSIFIERS_NAMES]
             results.append(result)
     return results
 
 
 def run():
-    # datasets = get_datasets()
+    datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
-    # inspector = inspect(engine)
+    inspector = inspect(engine)
     TABLE_NAME = "fixed_variable_lengths"
-    # if inspector.has_table(TABLE_NAME):
-        # current_df = pd.read_sql(TABLE_NAME, engine)
-        # computed = set(current_df.dataset.unique())
-    # else:
-        # computed = set()
+    if inspector.has_table(TABLE_NAME):
+        current_df = pd.read_sql(TABLE_NAME, engine)
+        computed = set(current_df.dataset.unique())
+    else:
+        computed = set()
 
-    datasets = ["CBF","GunPoint"]
     for dataset in datasets:
-        # if dataset.length < 60 or dataset.name in computed:
-            # continue
+        if dataset.length < 60 or dataset.name in computed:
+            continue
         try:
-            results = compare(dataset)
+            results = compare(dataset.name)
             df = pd.DataFrame(results, columns=columns)
             df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
         except:
-            print(f"Error happened with dataset {dataset}")
+            print(f"Error happened with dataset {dataset.name}")
 
 
 if __name__ == "__main__":
