@@ -52,7 +52,7 @@ def _eval_bruteforce(X, y, candidates, window_ts_ids, normalize_by_length=False)
                 continue
             dist = distance_numba(X[ts_id], window)
             if normalize_by_length:
-                dist /= len(window)# Should we use sqrt of n?
+                dist /= len(window)  # Should we use sqrt of n?
             dists_to_ts[ts_id] = dist
 
         with objmode(start="f8"):
@@ -81,8 +81,19 @@ def _eval_bruteforce(X, y, candidates, window_ts_ids, normalize_by_length=False)
         infogain_time = end - start
         res[window_id][4] = infgain_score
         res[window_id][5] = infogain_time
-
     return res
+
+
+def evaluate(data, windows, windows_ts_ids):
+    """Given data, windows and their corresponding ts_ids from which they have
+    been extracted; this function return a dataframe with the scores,
+    their timings, as well as the label of each window"""
+    results = _eval_bruteforce(data.X_train, data.y_train, windows, windows_ts_ids)
+    cols = ["silhouette", "silhouette_time", "fstat", "fstat_time", "gain", "gain_time"]
+    df = pd.DataFrame(results, columns=cols)
+    windows_labels = data.y_train[windows_ts_ids]
+    df["label"] = windows_labels
+    return df
 
 
 def bruteforce(data: Data, window_manager: Windows):

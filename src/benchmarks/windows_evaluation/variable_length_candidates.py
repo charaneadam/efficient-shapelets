@@ -4,7 +4,7 @@ from sqlalchemy import inspect
 from src.benchmarks.get_experiment import get_datasets
 from src.storage.data import Data
 from src.storage.database import engine
-from src.benchmarks.windows_evaluation.bruteforce import _eval_bruteforce
+from src.benchmarks.windows_evaluation.bruteforce import evaluate
 
 TABLE_NAME = "random_lengths_candidates"
 
@@ -25,18 +25,6 @@ def sample_subsequence_positions(ts_length):
     length = max(length, 3)
     end_pos = min(ts_length, start_pos + length)
     return start_pos, end_pos
-
-
-def evaluate(data, windows, windows_ts_ids):
-    """Given data, windows and their corresponding ts_ids from which they have
-    been extracted; this function return a dataframe with the scores,
-    their timings, as well as the label of each window"""
-    results = _eval_bruteforce(data.X_train, data.y_train, windows, windows_ts_ids)
-    cols = ["silhouette", "silhouette_time", "fstat", "fstat_time", "gain", "gain_time"]
-    df = pd.DataFrame(results, columns=cols)
-    windows_labels = data.y_train[windows_ts_ids]
-    df["label"] = windows_labels
-    return df
 
 
 def candidates_and_tsids(data):

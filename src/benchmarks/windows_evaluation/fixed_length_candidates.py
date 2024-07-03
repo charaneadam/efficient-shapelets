@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import inspect
 from src.benchmarks.get_experiment import get_datasets
-from src.benchmarks.windows_evaluation.bruteforce import _eval_bruteforce
+from src.benchmarks.windows_evaluation.bruteforce import evaluate
 from src.exceptions import NormalizationFailure
 from src.storage.data import Data
 from src.storage.database import engine
@@ -23,21 +23,7 @@ def normalize(candidate):
         raise NormalizationFailure
 
 
-def evaluate(data, windows, windows_ts_ids, normalize_length=False):
-    """Given data, windows and their corresponding ts_ids from which they have
-    been extracted; this function return a dataframe with the scores,
-    their timings, as well as the label of each window"""
-    results = _eval_bruteforce(
-        data.X_train, data.y_train, windows, windows_ts_ids, normalize_length
-    )
-    cols = ["silhouette", "silhouette_time", "fstat", "fstat_time", "gain", "gain_time"]
-    df = pd.DataFrame(results, columns=cols)
-    windows_labels = data.y_train[windows_ts_ids]
-    df["label"] = windows_labels
-    return df
-
-
-def candidates_and_tsids(data, window_length, normalize_by_length=False):
+def candidates_and_tsids(data, window_length):
     """Given some data, this function samples a number of shapelets with
     different lengths. It returns the Z-normalized candidates as well as
     the ids of the time series from which they have been extracted."""
@@ -68,7 +54,7 @@ def candidates_and_tsids(data, window_length, normalize_by_length=False):
                 the number of candidates is satisfied"""
                 pass
     candidates_info = np.array(ids)
-    df = evaluate(data, candidates, candidates_info[:, 0], normalize_by_length)
+    df = evaluate(data, candidates, candidates_info[:, 0])
     df["dataset"] = data.dataset_name
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
@@ -86,7 +72,10 @@ def run():
 
     for dataset in datasets:
         data = None
+        error = False
         for window_perc in [0.05, 0.1, 0.2, 0.3, 0.5, 0.6]:
+            if error:
+                continue
             window_size = int(window_perc * dataset.length)
             if (
                 dataset.name in processed_datasets
@@ -98,6 +87,7 @@ def run():
             try:
                 candidates_and_tsids(data, window_size)
             except:
+                error = True
                 print(f"Error with {dataset.name} length {window_size}")
 
 
