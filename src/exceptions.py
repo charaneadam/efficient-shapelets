@@ -8,3 +8,7 @@ class TransformationFailrue(Exception):
 
 class ClassificationFailure(Exception):
     pass
+
+
+class NormalizationFailure(Exception):
+    pass
