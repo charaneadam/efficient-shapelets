@@ -7,7 +7,7 @@ from src.exceptions import NormalizationFailure
 from src.storage.data import Data
 from src.storage.database import engine
 
-TABLE_NAME = "same_length_candidates"
+from src.storage.database import SAME_LENGTH_CANDIDATES_TABLE_NAME
 
 
 def sample_subsequence_positions(ts_length, window_length):
@@ -63,15 +63,15 @@ def candidates_and_tsids(data, window_length):
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
     df["length"] = candidates_info[:, 2]
-    df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
+    df.to_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine, if_exists="append", index=False)
 
 
 def run():
     datasets = get_datasets()
     inspector = inspect(engine)
     processed_datasets = dict()
-    if inspector.has_table(TABLE_NAME):
-        df = pd.read_sql(TABLE_NAME, engine).groupby(["dataset"])["length"]
+    if inspector.has_table(SAME_LENGTH_CANDIDATES_TABLE_NAME):
+        df = pd.read_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine).groupby(["dataset"])["length"]
         processed_datasets = df.agg("unique").to_dict()
 
     for dataset in datasets:

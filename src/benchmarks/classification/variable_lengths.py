@@ -7,8 +7,10 @@ from src.storage.database import engine
 from sqlalchemy import inspect
 from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
-
-CLASSIFICATION_VARIABLE_TABLE_NAME = "classification_variable_lengths"
+from src.storage.database import (
+    VARIABLE_LENGTH_CANDIDATES_TABLE_NAME,
+    VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME,
+)
 
 
 def _select_best_k(df, label, method, K, data):
@@ -44,7 +46,7 @@ def compare(dataset_name):
     data = Data(dataset_name)
     results = []
     df = pd.read_sql(
-        f"""SELECT * FROM random_lengths_candidates
+        f"""SELECT * FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}
         WHERE dataset='{dataset_name}'""",
         engine,
     )
@@ -61,12 +63,12 @@ def compare(dataset_name):
 
 def run():
     datasets = pd.read_sql(
-        "SELECT DISTINCT dataset FROM random_lengths_candidates", engine
+        f"SELECT DISTINCT dataset FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}", engine
     ).values.squeeze()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
-    if inspector.has_table(CLASSIFICATION_VARIABLE_TABLE_NAME):
-        current_df = pd.read_sql(CLASSIFICATION_VARIABLE_TABLE_NAME, engine)
+    if inspector.has_table(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME):
+        current_df = pd.read_sql(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
     else:
         computed = set()
@@ -77,7 +79,7 @@ def run():
             results = compare(dataset)
             df = pd.DataFrame(results, columns=columns)
             df.to_sql(
-                CLASSIFICATION_VARIABLE_TABLE_NAME,
+                VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME,
                 engine,
                 if_exists="append",
                 index=False,

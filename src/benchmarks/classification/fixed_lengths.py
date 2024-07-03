@@ -5,8 +5,12 @@ from src.benchmarks.classification.utils import _classify, transform
 
 from src.storage.database import engine
 from sqlalchemy import inspect
-from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
+from src.classifiers import CLASSIFIERS_NAMES
+from src.storage.database import (
+    SAME_LENGTH_CLASSIFICATION_TABLE_NAME,
+    SAME_LENGTH_CANDIDATES_TABLE_NAME,
+)
 
 
 def _select_best_k(df, label, method, K, data):
@@ -41,7 +45,7 @@ def compare(dataset_name, window_length):
     warnings.simplefilter("ignore")
     data = Data(dataset_name)
     df = pd.read_sql(
-        f"""SELECT * FROM same_length_candidates
+        f"""SELECT * FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
         WHERE dataset='{dataset_name}' AND length={window_length}""",
         engine,
     )
@@ -59,14 +63,13 @@ def compare(dataset_name, window_length):
 
 def run():
     datasets = pd.read_sql(
-        "SELECT DISTINCT dataset FROM same_length_candidates", engine
+        f"SELECT DISTINCT dataset FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}", engine
     ).values.squeeze()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
 
     inspector = inspect(engine)
-    TABLE_NAME = "classification_same_lengths"
-    if inspector.has_table(TABLE_NAME):
-        current_df = pd.read_sql(TABLE_NAME, engine)
+    if inspector.has_table(SAME_LENGTH_CLASSIFICATION_TABLE_NAME):
+        current_df = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
     else:
         computed = set()
@@ -75,7 +78,7 @@ def run():
             continue
         try:
             lengths = pd.read_sql(
-                f"""SELECT DISTINCT length FROM same_length_candidates
+                f"""SELECT DISTINCT length FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
                 WHERE dataset='{dataset}'""",
                 engine,
             ).values.squeeze()
@@ -83,7 +86,12 @@ def run():
                 results = compare(dataset, window_size)
                 df = pd.DataFrame(results, columns=columns)
                 df["window_size"] = window_size
-                df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
+                df.to_sql(
+                    SAME_LENGTH_CLASSIFICATION_TABLE_NAME,
+                    engine,
+                    if_exists="append",
+                    index=False,
+                )
         except:
             print(f"Error happened with dataset {dataset.name}")
 

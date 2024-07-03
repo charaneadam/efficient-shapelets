@@ -5,11 +5,12 @@ from src.benchmarks.get_experiment import get_datasets
 from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
 from src.storage.database import engine
+from src.storage.database import SAME_LENGTH_CANDIDATES_TABLE_NAME
 
 
 def candidates_df(dataset_name):
     query = f"""SELECT silhouette, fstat, gain, label, ts_id, start, length
-                FROM fixed_length_candidates
+                FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
                 WHERE dataset='{dataset_name}'
             """
     fixed_lengths = pd.read_sql(query, engine)
@@ -67,9 +68,8 @@ def run():
     datasets = get_datasets()
     columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
-    TABLE_NAME = "fixed_variable_lengths"
-    if inspector.has_table(TABLE_NAME):
-        current_df = pd.read_sql(TABLE_NAME, engine)
+    if inspector.has_table(SAME_LENGTH_CANDIDATES_TABLE_NAME):
+        current_df = pd.read_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
     else:
         computed = set()
@@ -80,7 +80,7 @@ def run():
         try:
             results = compare(dataset.name)
             df = pd.DataFrame(results, columns=columns)
-            df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
+            df.to_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine, if_exists="append", index=False)
         except:
             print(f"Error happened with dataset {dataset.name}")
 

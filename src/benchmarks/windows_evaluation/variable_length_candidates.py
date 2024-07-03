@@ -6,7 +6,7 @@ from src.storage.data import Data
 from src.storage.database import engine
 from src.benchmarks.windows_evaluation.bruteforce import evaluate
 
-TABLE_NAME = "random_lengths_candidates"
+from src.storage.database import VARIABLE_LENGTH_CANDIDATES_TABLE_NAME
 
 
 def sample_subsequence_positions(ts_length):
@@ -65,15 +65,17 @@ def candidates_and_tsids(data):
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
     df["end"] = candidates_info[:, 2]
-    df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
+    df.to_sql(
+        VARIABLE_LENGTH_CANDIDATES_TABLE_NAME, engine, if_exists="append", index=False
+    )
 
 
 def run():
     datasets = get_datasets()
     inspector = inspect(engine)
     computed = {}
-    if inspector.has_table(TABLE_NAME):
-        current_df = pd.read_sql(TABLE_NAME, engine)
+    if inspector.has_table(VARIABLE_LENGTH_CANDIDATES_TABLE_NAME):
+        current_df = pd.read_sql(VARIABLE_LENGTH_CANDIDATES_TABLE_NAME, engine)
         computed = set(current_df.dataset.unique())
     for dataset in datasets:
         if dataset.length < 60 or dataset.name in computed:
