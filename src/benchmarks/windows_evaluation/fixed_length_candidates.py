@@ -32,10 +32,12 @@ def candidates_and_tsids(data, window_length):
     labels = list(set(data.y_train))
     candidates = []
     ids = []
+    fail = 0
     for label in labels:
         ts_ids = np.where(data.y_train == label)[0]
         remaining = n_shapelets
-        while remaining > 0:
+        fail = 0
+        while remaining > 0 and fail < 10:
             try:
                 ts_id = np.random.choice(ts_ids)
                 start_pos, end_pos = sample_subsequence_positions(
@@ -52,7 +54,9 @@ def candidates_and_tsids(data, window_length):
                 deviation is 0. When a failure happens, we simply retry
                 with a new sample, and keep repeating this process till
                 the number of candidates is satisfied"""
-                pass
+                fail += 1
+    if fail == 10:
+        return
     candidates_info = np.array(ids)
     df = evaluate(data, candidates, candidates_info[:, 0])
     df["dataset"] = data.dataset_name
