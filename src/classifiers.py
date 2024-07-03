@@ -8,7 +8,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
-    "Linear SVM": SVC,
+    # "Linear SVM": SVC,
     "RBF SVM": SVC,
     "Gaussian Process": GaussianProcessClassifier,
     "Decision Tree": DecisionTreeClassifier,
