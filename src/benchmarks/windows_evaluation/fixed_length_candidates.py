@@ -24,7 +24,7 @@ def normalize(candidate):
         raise NormalizationFailure
 
 
-def candidates_and_tsids(data, window_length):
+def candidates_and_tsids(dataset_id, data, window_length):
     """Given some data, this function samples a number of shapelets with
     different lengths. It returns the Z-normalized candidates as well as
     the ids of the time series from which they have been extracted."""
@@ -60,7 +60,7 @@ def candidates_and_tsids(data, window_length):
         return
     candidates_info = np.array(ids)
     df = evaluate(data, candidates, candidates_info[:, 0])
-    df["dataset"] = data.dataset_name
+    df["dataset"] = dataset_id
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
     df["length"] = candidates_info[:, 2]
@@ -90,7 +90,7 @@ def run():
             if data is None:
                 data = Data(dataset.name)
             try:
-                candidates_and_tsids(data, window_size)
+                candidates_and_tsids(dataset.id, data, window_size)
             except:
                 error = True
                 print(f"Error with {dataset.name} length {window_size}")

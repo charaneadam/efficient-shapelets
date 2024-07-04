@@ -1,3 +1,4 @@
+import pandas as pd
 from time import perf_counter
 import numpy as np
 from numba import njit, prange, objmode

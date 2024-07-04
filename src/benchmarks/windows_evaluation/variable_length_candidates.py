@@ -29,7 +29,7 @@ def sample_subsequence_positions(ts_length):
     return start_pos, end_pos
 
 
-def candidates_and_tsids(data):
+def candidates_and_tsids(dataset_id, data):
     """Given some data, this function samples a number of shapelets with
     different lengths. It returns the Z-normalized candidates as well as
     the ids of the time series from which they have been extracted."""
@@ -63,7 +63,7 @@ def candidates_and_tsids(data):
         return
     candidates_info = np.array(ids)
     df = evaluate(data, candidates, candidates_info[:, 0])
-    df["dataset"] = data.dataset_name
+    df["dataset_id"] = dataset_id
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
     df["end"] = candidates_info[:, 2]
@@ -84,7 +84,7 @@ def run():
             continue
         try:
             data = Data(dataset.name)
-            candidates_and_tsids(data)
+            candidates_and_tsids(dataset.id, data)
         except:
             print(f"Error happened with dataset {dataset.name}")
 
