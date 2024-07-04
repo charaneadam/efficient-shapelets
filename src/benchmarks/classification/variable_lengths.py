@@ -10,7 +10,7 @@ from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
 from src.storage.database import (
     VARIABLE_LENGTH_CANDIDATES_TABLE_NAME,
-    VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME,
+    VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME
 )
 
 
@@ -80,8 +80,8 @@ def run():
     ).values.squeeze()
     columns = ["dataset_id", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
-    if inspector.has_table(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME):
-        current_df = pd.read_sql(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
+    if inspector.has_table(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME):
+        current_df = pd.read_sql(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME, engine)
         computed = set(current_df.dataset_id.unique())
     else:
         computed = set()
@@ -92,7 +92,7 @@ def run():
             results = compare(dataset_id)
             df = pd.DataFrame(results, columns=columns)
             df.to_sql(
-                VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME,
+                VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME,
                 engine,
                 if_exists="append",
                 index=False,
