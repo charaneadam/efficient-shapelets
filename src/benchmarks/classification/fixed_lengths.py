@@ -13,6 +13,7 @@ from src.storage.database import (
     SAME_LENGTH_CANDIDATES_TABLE_NAME,
 )
 
+
 def _select_best_k(df, label, method, K, data):
     view = df[df.label == label]
     info = view.sort_values(by=method, ascending=False)[
@@ -35,7 +36,10 @@ def classify(df, data, method, k):
     X_tr, X_te = transform(data, shapelets)
     accuracies = {}
     with Pool(len(CLASSIFIERS_NAMES)) as p:
-        results = [p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test)) for clf_name in CLASSIFIERS_NAMES]
+        results = [
+            p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test))
+            for clf_name in CLASSIFIERS_NAMES
+        ]
         p.close()
         p.join()
     for res, clf_name in zip(results, CLASSIFIERS_NAMES):
@@ -46,7 +50,11 @@ def classify(df, data, method, k):
 
 def compare(dataset_id, window_length):
     warnings.simplefilter("ignore")
-    dataset_name = str(pd.read_sql(f"SELECT name FROM dataset WHERE id={dataset_id}", engine).values.squeeze())
+    dataset_name = str(
+        pd.read_sql(
+            f"SELECT name FROM dataset WHERE id={dataset_id}", engine
+        ).values.squeeze()
+    )
     data = Data(dataset_name)
     df = pd.read_sql(
         f"""SELECT * FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
