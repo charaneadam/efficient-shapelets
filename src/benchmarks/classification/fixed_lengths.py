@@ -1,3 +1,4 @@
+from multiprocessing import Pool
 import warnings
 import pandas as pd
 
@@ -11,7 +12,6 @@ from src.storage.database import (
     SAME_LENGTH_CLASSIFICATION_TABLE_NAME,
     SAME_LENGTH_CANDIDATES_TABLE_NAME,
 )
-
 
 def _select_best_k(df, label, method, K, data):
     view = df[df.label == label]
@@ -34,9 +34,12 @@ def classify(df, data, method, k):
         shapelets.extend(candidates)
     X_tr, X_te = transform(data, shapelets)
     accuracies = {}
-    for clf_name in CLASSIFIERS_NAMES:
-        res = _classify(clf_name, X_tr, data.y_train, X_te, data.y_test)
-        fit_time, predict_time, acc, f1, labels, precision, recall = res
+    with Pool(len(CLASSIFIERS_NAMES)) as p:
+        results = [p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test)) for clf_name in CLASSIFIERS_NAMES]
+        p.close()
+        p.join()
+    for res, clf_name in zip(results, CLASSIFIERS_NAMES):
+        fit_time, predict_time, acc, f1, labels, precision, recall = res.get()
         accuracies[clf_name] = acc
     return accuracies
 
@@ -75,7 +78,6 @@ def run():
         computed = set()
 
     columns = ["dataset_id", "method", "K_shapelets"] + CLASSIFIERS_NAMES
-    datasets = [7]
     for dataset_id in datasets:
         if dataset_id in computed:
             continue
