@@ -1,6 +1,6 @@
 from time import perf_counter
 import numpy as np
-from numba import njit, objmode
+from numba import njit, prange, objmode
 
 from src.benchmarks.get_experiment import (
     get_approach_id,
@@ -17,7 +17,7 @@ from src.benchmarks.windows_evaluation.utils import (
 )
 
 
-@njit(fastmath=True)
+@njit(fastmath=True, parallel=True)
 def _eval_bruteforce(X, y, candidates, window_ts_ids, normalize_by_length=False):
     """Computes the silhouette, fstat and infogain for every candidate as well
     as the timing for each operation
@@ -42,7 +42,7 @@ def _eval_bruteforce(X, y, candidates, window_ts_ids, normalize_by_length=False)
     n_windows = len(candidates)
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))  # 6: 3 for sil,infogain,fstat, and 3 for time
-    for window_id in range(n_windows):
+    for window_id in prange(n_windows):
         window = candidates[window_id]
         window_ts_id = window_ts_ids[window_id]
         window_label = y[window_ts_id]

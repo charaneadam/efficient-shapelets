@@ -1,3 +1,4 @@
+from numba import set_num_threads
 import numpy as np
 import pandas as pd
 from sqlalchemy import inspect
@@ -6,7 +7,7 @@ from src.benchmarks.windows_evaluation.bruteforce import evaluate
 from src.exceptions import NormalizationFailure
 from src.storage.data import Data
 from src.storage.database import engine
-
+from src.config import NUM_THREADS
 from src.storage.database import SAME_LENGTH_CANDIDATES_TABLE_NAME
 
 
@@ -96,4 +97,5 @@ def run():
 
 
 if __name__ == "__main__":
+    set_num_threads(NUM_THREADS)
     run()
