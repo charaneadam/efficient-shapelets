@@ -41,12 +41,13 @@ def classify(df, data, method, k):
     return accuracies
 
 
-def compare(dataset_name, window_length):
+def compare(dataset_id, window_length):
     warnings.simplefilter("ignore")
+    dataset_name = str(pd.read_sql(f"SELECT name FROM dataset WHERE id={dataset_id}", engine).values.squeeze())
     data = Data(dataset_name)
     df = pd.read_sql(
         f"""SELECT * FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
-        WHERE dataset='{dataset_name}' AND length={window_length}""",
+        WHERE dataset_id={dataset_id} AND length={window_length}""",
         engine,
     )
     results = []
@@ -56,7 +57,7 @@ def compare(dataset_name, window_length):
             models_accuracies = [
                 accuracies.get(clf_name, None) for clf_name in CLASSIFIERS_NAMES
             ]
-            result = [dataset_name, method, K] + models_accuracies
+            result = [dataset_id, method, K] + models_accuracies
             results.append(result)
     return results
 
@@ -79,20 +80,15 @@ def run():
         if dataset_id in computed:
             continue
 
-        dataset_name = str(
-            pd.read_sql(
-                f"SELECT name FROM dataset WHERE id={dataset_id}", engine
-            ).values.squeeze()
-        )
         try:
             lengths = pd.read_sql(
                 f"""SELECT DISTINCT length
                 FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
-                WHERE dataset='{dataset_id}'""",
+                WHERE dataset_id={dataset_id}""",
                 engine,
             ).values.squeeze()
             for window_size in lengths:
-                results = compare(dataset_name, window_size)
+                results = compare(dataset_id, window_size)
                 df = pd.DataFrame(results, columns=columns)
                 df["window_size"] = window_size
                 df.to_sql(
@@ -101,8 +97,9 @@ def run():
                     if_exists="append",
                     index=False,
                 )
-        except:
-            print(f"Error happened with dataset {dataset_name}")
+        except Exception as e:
+            print(f"Error happened with dataset {dataset_id}")
+            print(e)
 
 
 if __name__ == "__main__":
