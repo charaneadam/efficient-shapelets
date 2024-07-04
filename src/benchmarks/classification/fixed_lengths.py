@@ -63,27 +63,36 @@ def compare(dataset_name, window_length):
 
 def run():
     datasets = pd.read_sql(
-        f"SELECT DISTINCT dataset FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}", engine
+        f"SELECT DISTINCT dataset_id FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}", engine
     ).values.squeeze()
-    columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
 
     inspector = inspect(engine)
     if inspector.has_table(SAME_LENGTH_CLASSIFICATION_TABLE_NAME):
         current_df = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
-        computed = set(current_df.dataset.unique())
+        computed = set(current_df.dataset_id.unique())
     else:
         computed = set()
-    for dataset in datasets:
-        if dataset in computed:
+
+    columns = ["dataset_id", "method", "K_shapelets"] + CLASSIFIERS_NAMES
+    datasets = [7]
+    for dataset_id in datasets:
+        if dataset_id in computed:
             continue
+
+        dataset_name = str(
+            pd.read_sql(
+                f"SELECT name FROM dataset WHERE id={dataset_id}", engine
+            ).values.squeeze()
+        )
         try:
             lengths = pd.read_sql(
-                f"""SELECT DISTINCT length FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
-                WHERE dataset='{dataset}'""",
+                f"""SELECT DISTINCT length
+                FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}
+                WHERE dataset='{dataset_id}'""",
                 engine,
             ).values.squeeze()
             for window_size in lengths:
-                results = compare(dataset, window_size)
+                results = compare(dataset_name, window_size)
                 df = pd.DataFrame(results, columns=columns)
                 df["window_size"] = window_size
                 df.to_sql(
@@ -93,7 +102,7 @@ def run():
                     index=False,
                 )
         except:
-            print(f"Error happened with dataset {dataset.name}")
+            print(f"Error happened with dataset {dataset_name}")
 
 
 if __name__ == "__main__":
