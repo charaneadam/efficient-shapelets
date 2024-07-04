@@ -56,7 +56,7 @@ if [[ $# -ne 0 ]]; then
     run_container_if_off
     podman exec $CONTAINER_NAME bash /scripts/run.sh $2
   elif [[ $1 == "benchmark" ]]; then
-    podman exec $CONTAINER_NAME python -m $(echo $(find src/benchmarks/*.py | fzf) | cut -d '.' -f1 | tr '/' '.')
+    podman exec $CONTAINER_NAME python -m $(find src/benchmarks -name "*.py" | fzf | cut -d . -f1 | tr / .)
     
   else
     echo "Wrong argument, run using: ./container [start|stop|build|bash|psql|run]]"

@@ -20,9 +20,6 @@ elif [[ $1 == "webapp" ]] then
   else
     echo "Webapp already running."
   fi
-elif [[ $1 == "benchmark" ]] then
-  python -m $(echo $(find src/benchmarks/ -type f -name "*.py") | cut -d '.' -f1 | tr '/' '.')
-
 else
   echo "Wrong argument, syntax : ./container run [jupyter|webapp]"
 fi
