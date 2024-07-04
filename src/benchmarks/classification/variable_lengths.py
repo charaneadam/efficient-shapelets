@@ -1,3 +1,4 @@
+from multiprocessing import Pool
 import warnings
 import pandas as pd
 
@@ -34,20 +35,31 @@ def classify(df, data, method, k):
         shapelets.extend(candidates)
     X_tr, X_te = transform(data, shapelets)
     accuracies = {}
-    for clf_name in CLASSIFIERS_NAMES:
-        res = _classify(clf_name, X_tr, data.y_train, X_te, data.y_test)
-        fit_time, predict_time, acc, f1, labels, precision, recall = res
+    with Pool(len(CLASSIFIERS_NAMES)) as p:
+        results = [
+            p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test))
+            for clf_name in CLASSIFIERS_NAMES
+        ]
+        p.close()
+        p.join()
+    for res, clf_name in zip(results, CLASSIFIERS_NAMES):
+        fit_time, predict_time, acc, f1, labels, precision, recall = res.get()
         accuracies[clf_name] = acc
     return accuracies
 
 
-def compare(dataset_name):
+def compare(dataset_id):
     warnings.simplefilter("ignore")
+    dataset_name = str(
+        pd.read_sql(
+            f"SELECT name FROM dataset WHERE id={dataset_id}", engine
+        ).values.squeeze()
+    )
     data = Data(dataset_name)
     results = []
     df = pd.read_sql(
         f"""SELECT * FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}
-        WHERE dataset='{dataset_name}'""",
+        WHERE dataset_id='{dataset_id}'""",
         engine,
     )
     for method in ["silhouette", "gain", "fstat"]:
@@ -56,27 +68,28 @@ def compare(dataset_name):
             models_accuracies = [
                 accuracies.get(clf_name, None) for clf_name in CLASSIFIERS_NAMES
             ]
-            result = [dataset_name, method, K] + models_accuracies
+            result = [dataset_id, method, K] + models_accuracies
             results.append(result)
     return results
 
 
 def run():
     datasets = pd.read_sql(
-        f"SELECT DISTINCT dataset FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}", engine
+        f"SELECT DISTINCT dataset_id FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}",
+        engine,
     ).values.squeeze()
-    columns = ["dataset", "method", "K_shapelets"] + CLASSIFIERS_NAMES
+    columns = ["dataset_id", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
     if inspector.has_table(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME):
         current_df = pd.read_sql(VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
-        computed = set(current_df.dataset.unique())
+        computed = set(current_df.dataset_id.unique())
     else:
         computed = set()
-    for dataset in datasets:
-        if dataset in computed:
+    for dataset_id in datasets:
+        if dataset_id in computed:
             continue
         try:
-            results = compare(dataset)
+            results = compare(dataset_id)
             df = pd.DataFrame(results, columns=columns)
             df.to_sql(
                 VARIABLE_LENGTH_CLASSIFICATION_TABLE_NAME,
@@ -85,7 +98,7 @@ def run():
                 index=False,
             )
         except Exception as e:
-            print(f"Error during classification of dataset {dataset}.")
+            print(f"Error during classification of dataset {dataset_id}.")
             print(f"Error: {e}")
 
 
