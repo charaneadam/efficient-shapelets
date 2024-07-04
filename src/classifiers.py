@@ -5,6 +5,8 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
+from src.config import NUM_CORES_FOR_CLASSIFICATION
+
 
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
@@ -33,7 +35,7 @@ class Classifier:
     def __init__(self, classifier_name):
         self._alg = CLASSIFIERS[classifier_name]
         params = DEFAULT_CLASSIFIERS_PARAMS.get(classifier_name, {})
-        self._alg = self._alg(**params)
+        self._alg = self._alg(n_jobs=NUM_CORES_FOR_CLASSIFICATION, **params)
 
     def fit(self, X, y):
         self._alg.fit(X, y)
