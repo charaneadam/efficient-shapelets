@@ -78,9 +78,9 @@ def run():
     computed = {}
     if inspector.has_table(VARIABLE_LENGTH_CANDIDATES_TABLE_NAME):
         current_df = pd.read_sql(VARIABLE_LENGTH_CANDIDATES_TABLE_NAME, engine)
-        computed = set(current_df.dataset.unique())
+        computed = set(current_df.dataset_id.unique())
     for dataset in datasets:
-        if dataset.length < 60 or dataset.name in computed:
+        if dataset.length < 60 or dataset.id in computed:
             continue
         try:
             data = Data(dataset.name)

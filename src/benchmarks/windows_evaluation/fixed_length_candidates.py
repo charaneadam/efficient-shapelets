@@ -60,7 +60,7 @@ def candidates_and_tsids(dataset_id, data, window_length):
         return
     candidates_info = np.array(ids)
     df = evaluate(data, candidates, candidates_info[:, 0])
-    df["dataset"] = dataset_id
+    df["dataset_id"] = dataset_id
     df["ts_id"] = candidates_info[:, 0]
     df["start"] = candidates_info[:, 1]
     df["length"] = candidates_info[:, 2]
@@ -72,7 +72,7 @@ def run():
     inspector = inspect(engine)
     processed_datasets = dict()
     if inspector.has_table(SAME_LENGTH_CANDIDATES_TABLE_NAME):
-        df = pd.read_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine).groupby(["dataset"])["length"]
+        df = pd.read_sql(SAME_LENGTH_CANDIDATES_TABLE_NAME, engine).groupby(["dataset_id"])["length"]
         processed_datasets = df.agg("unique").to_dict()
 
     for dataset in datasets:
@@ -83,7 +83,7 @@ def run():
                 continue
             window_size = int(window_perc * dataset.length)
             if (
-                dataset.name in processed_datasets
+                dataset.id in processed_datasets
                 and window_size in processed_datasets[dataset.name]
             ) or dataset.length < 60:
                 continue
