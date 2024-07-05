@@ -13,14 +13,14 @@ fixed_length = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
 variable_length = pd.read_sql(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME, engine)
 
 
-datasets = set(fixed_length.dataset.unique()).intersection(
-    variable_length.dataset.unique()
+datasets = set(fixed_length.dataset_id.unique()).intersection(
+    variable_length.dataset_id.unique()
 )
 print(
-    f"Number of datasets classified with same length: {fixed_length.dataset.unique().shape[0]}"
+    f"Number of datasets classified with same length: {fixed_length.dataset_id.unique().shape[0]}"
 )
 print(
-    f"Number of datasets classified with same length: {variable_length.dataset.unique().shape[0]}"
+    f"Number of datasets classified with same length: {variable_length.dataset_id.unique().shape[0]}"
 )
 print(f"Number of datasets in common: {len(datasets)}")
 # variable_length = variable_length[variable_length.dataset.isin(datasets)]
@@ -46,9 +46,9 @@ cm = 1 / 2.54
 def distribution_of_difference_between_accuracies():
     # Distribution of difference between the accuracy of variable length and fixed length
     fixed_view = fixed_length.groupby(
-        ["dataset", "method", "K_shapelets"]
+        ["dataset_id", "method", "K_shapelets"]
     ).mean()  # mean of classification using different windows
-    vl_view = variable_length.set_index(["dataset", "method", "K_shapelets"]).reindex(
+    vl_view = variable_length.set_index(["dataset_id", "method", "K_shapelets"]).reindex(
         fixed_view.index
     )
 
@@ -85,8 +85,8 @@ def accuracy_plot(K_shapelets=5):
     fig, ax = plt.subplots(1, 1, figsize=(14 * cm, 10 * cm))
     sns.scatterplot(
         variable_length[variable_length.K_shapelets == K_shapelets],
-        x="dataset",
-        y="Linear SVM",
+        x="dataset_id",
+        y="RBF SVM",
         hue="method",
         ax=ax,
         palette=palette,
@@ -108,9 +108,9 @@ def distribution_accuracy():
     # Distribution of accuracy for the 3 methods with both fixed vs variable length
     fig, axs = plt.subplots(1, 2, figsize=(14 * cm, 5 * cm))
     fixed_view = fixed_length.groupby(
-        ["dataset", "method", "K_shapelets"]
+        ["dataset_id", "method", "K_shapelets"]
     ).mean()  # mean of classification using different windows
-    vl_view = variable_length.set_index(["dataset", "method", "K_shapelets"]).reindex(
+    vl_view = variable_length.set_index(["dataset_id", "method", "K_shapelets"]).reindex(
         fixed_view.index
     )
     sns.boxplot(
