@@ -75,7 +75,15 @@ def compare(dataset_id, window_length):
 
 def run():
     datasets = pd.read_sql(
-        f"SELECT DISTINCT dataset_id FROM {SAME_LENGTH_CANDIDATES_TABLE_NAME}", engine
+        f"""
+        SELECT DISTINCT id FROM 
+        (SELECT t1.id, (t1.train + t1.test)*t1.length AS size 
+        FROM dataset t1 
+        RIGHT JOIN {SAME_LENGTH_CANDIDATES_TABLE_NAME} t2 
+        ON t1.id = t2.dataset_id 
+        ORDER BY size ASC);
+        """,
+        engine,
     ).values.squeeze()
 
     inspector = inspect(engine)

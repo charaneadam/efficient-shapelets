@@ -10,7 +10,7 @@ from src.classifiers import CLASSIFIERS_NAMES
 from src.storage.data import Data
 from src.storage.database import (
     VARIABLE_LENGTH_CANDIDATES_TABLE_NAME,
-    VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME
+    VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME,
 )
 
 
@@ -75,9 +75,18 @@ def compare(dataset_id):
 
 def run():
     datasets = pd.read_sql(
-        f"SELECT DISTINCT dataset_id FROM {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME}",
+        f"""
+        SELECT DISTINCT id FROM 
+        (SELECT t1.id, (t1.train + t1.test)*t1.length AS size 
+        FROM dataset t1 
+        RIGHT JOIN {VARIABLE_LENGTH_CANDIDATES_TABLE_NAME} t2 
+        ON t1.id = t2.dataset_id 
+        ORDER BY size ASC);
+        """,
+
         engine,
     ).values.squeeze()
+
     columns = ["dataset_id", "method", "K_shapelets"] + CLASSIFIERS_NAMES
     inspector = inspect(engine)
     if inspector.has_table(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME):
