@@ -3,11 +3,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sqlalchemy import create_engine
 
-from src.storage.database import engine
 from src.storage.database import SAME_LENGTH_CLASSIFICATION_TABLE_NAME
 from src.storage.database import VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME
 
+
+engine = create_engine("postgresql://postgres:pass@localhost:5432/test")
 
 fixed_length = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
 variable_length = pd.read_sql(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME, engine)
@@ -48,9 +50,9 @@ def distribution_of_difference_between_accuracies():
     fixed_view = fixed_length.groupby(
         ["dataset_id", "method", "K_shapelets"]
     ).mean()  # mean of classification using different windows
-    vl_view = variable_length.set_index(["dataset_id", "method", "K_shapelets"]).reindex(
-        fixed_view.index
-    )
+    vl_view = variable_length.set_index(
+        ["dataset_id", "method", "K_shapelets"]
+    ).reindex(fixed_view.index)
 
     fig, ax = plt.subplots(figsize=(14 * cm, 5 * cm))
     tmp_view = vl_view.reset_index()[["method", "K_shapelets", "Logistic Regression"]]
@@ -78,6 +80,7 @@ def distribution_of_difference_between_accuracies():
     ax.legend(fancybox=True, framealpha=0.9, ncol=3)
     fig.tight_layout()
     fig.savefig("/results/dist_diff_accuracies.png")
+    fig.savefig("/code/results/dist_diff_accuracies.png")
 
 
 def accuracy_plot(K_shapelets=5):
@@ -102,6 +105,7 @@ def accuracy_plot(K_shapelets=5):
     plt.grid()
     fig.tight_layout()
     fig.savefig(f"/results/{K_shapelets}_shapelets_accuracy.png")
+    fig.savefig(f"/code/results/{K_shapelets}_shapelets_accuracy.png")
 
 
 def distribution_accuracy():
@@ -110,9 +114,9 @@ def distribution_accuracy():
     fixed_view = fixed_length.groupby(
         ["dataset_id", "method", "K_shapelets"]
     ).mean()  # mean of classification using different windows
-    vl_view = variable_length.set_index(["dataset_id", "method", "K_shapelets"]).reindex(
-        fixed_view.index
-    )
+    vl_view = variable_length.set_index(
+        ["dataset_id", "method", "K_shapelets"]
+    ).reindex(fixed_view.index)
     sns.boxplot(
         fixed_view.reset_index(),
         x="K_shapelets",
@@ -146,6 +150,7 @@ def distribution_accuracy():
     )
     fig.tight_layout()
     fig.savefig("/results/accuracy.png")
+    fig.savefig("/code/results/accuracy.png")
 
 
 def runtime_comparisons():
@@ -176,11 +181,15 @@ def runtime_comparisons():
     df = df.style.format(decimal=",", thousands=".", precision=2)
     with open("/results/runtimes.tex", "w") as text_file:
         text_file.write(df.to_latex())
+    with open("/code/results/runtimes.tex", "w") as text_file:
+        text_file.write(df.to_latex())
 
 
 if __name__ == "__main__":
     if not os.path.exists("/results/"):
         os.makedirs("/results/")
+    if not os.path.exists("/code/results/"):
+        os.makedirs("/code/results/")
     distribution_accuracy()
     accuracy_plot()
     distribution_of_difference_between_accuracies()
