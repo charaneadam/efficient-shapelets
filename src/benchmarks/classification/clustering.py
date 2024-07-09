@@ -1,3 +1,4 @@
+from numba import set_num_threads
 from multiprocessing import Pool
 from time import perf_counter
 import numpy as np
@@ -13,6 +14,7 @@ from src.benchmarks.windows_evaluation.utils import (
     silhouette,
 )
 from src.classifiers import CLASSIFIERS_NAMES
+from src.config import NUM_THREADS
 from src.storage.data import Data, Windows
 from src.storage.database import SAME_LENGTH_CLASSIFICATION_TABLE_NAME
 
