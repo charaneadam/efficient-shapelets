@@ -195,4 +195,5 @@ def run():
 
 
 if __name__ == "__main__":
+    set_num_threads(NUM_THREADS)
     run()
