@@ -13,11 +13,11 @@ from src.config import NUM_CORES_FOR_CLASSIFICATION
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
     # "Linear SVM": SVC,
-    "RBF SVM": SVC,
+    # "RBF SVM": SVC,
     "Gaussian Process": GaussianProcessClassifier,
     "Decision Tree": DecisionTreeClassifier,
     "Random Forest": RandomForestClassifier,
-    "Ada Boost": AdaBoostClassifier,
+    # "Ada Boost": AdaBoostClassifier,
 }
 
 CLASSIFIERS_NAMES = sorted(list(CLASSIFIERS.keys()))
