@@ -5,10 +5,6 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-from sklearn.model_selection import GridSearchCV, ShuffleSplit
-from joblib import parallel_backend
-from src.config import NUM_CORES_FOR_CLASSIFICATION
-
 
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression,
