@@ -122,31 +122,8 @@ def classify(df, data, centroids, method, K):
     return classification_results
 
 
-def compare(data, window_length, method, K):
-    wm = Windows(window_length)
-    windows = wm.get_windows(data.X_train)
-    n_centroids = windows.shape[0] // 20
-    km = faiss.Kmeans(window_length, n_centroids)
-    km.train(windows)
-    dists, indices = km.index.search(windows, 1)
-    df = assign_labels_to_centroids(data, wm, indices, n_centroids)
-    scores_info = _eval_bruteforce(
-        data.X_train, data.y_train, km.centroids, df.label.values
-    )
-    scores = pd.DataFrame(
-        scores_info,
-        columns=[
-            "silhouette",
-            "silhouette time",
-            "fstat",
-            "fstat time",
-            "gain",
-            "gain time",
-        ],
-    )
-    evaluation_df = pd.concat([df, scores], axis=1)
-    evaluation_df["window size"] = window_length
-    classif_res = classify(evaluation_df, data, km.centroids, method, K)
+def compare(data, evaluation_df, centroids, window_length, method, K):
+    classif_res = classify(evaluation_df, data, centroids, method, K)
     models_results = [
         classif_res[clf_name] + [method, K, window_length] + [clf_name]
         for clf_name in CLASSIFIERS_NAMES
@@ -162,7 +139,7 @@ def compare(data, window_length, method, K):
         "classifier",
     ]
     classif_results = pd.DataFrame(models_results, columns=cols)
-    return evaluation_df, classif_results
+    return classif_results
 
 
 def cluster_dataset(dataset_id):
@@ -178,24 +155,62 @@ def cluster_dataset(dataset_id):
         WHERE dataset_id={dataset_id}""",
         engine,
     ).values.squeeze()
+    classif_dfs = []
     for length in lengths:
+        print(f"Dataset {dataset_id}, length={length}")
+        wm = Windows(length)
+        windows = wm.get_windows(data.X_train)
+
+        print(f"\tClustering ...", end=" ")
+        n_centroids = windows.shape[0] // 20
+        km = faiss.Kmeans(length, n_centroids)
+        km.train(windows)
+        print("Done.\n\tEvaluating ...", end=" ")
+        dists, indices = km.index.search(windows, 1)
+        df = assign_labels_to_centroids(data, wm, indices, n_centroids)
+        scores_info = _eval_bruteforce(
+            data.X_train, data.y_train, km.centroids, df.label.values
+        )
+        scores = pd.DataFrame(
+            scores_info,
+            columns=[
+                "silhouette",
+                "silhouette time",
+                "fstat",
+                "fstat time",
+                "gain",
+                "gain time",
+            ],
+        )
+        evaluation_df = pd.concat([df, scores], axis=1)
+        evaluation_df["dataset_id"] = dataset_id
+        evaluation_df["window size"] = length
+        print(f"Done.")
+
         for method in ["silhouette", "gain", "fstat"]:
             for K in [3, 5, 10, 20, 50, 100]:
-                eval_df, classif_df = compare(data, length, method, K)
-                eval_df["dataset_id"] = dataset_id
-                eval_df.to_sql("centroids_evaluation", engine, if_exists="append")
-                classif_df["dataset_id"] = dataset_id
-                classif_df.to_sql(
-                    "centroids_classification", engine, if_exists="append"
+                print(f"\tClassifying with {method} using {K} shapeletls", end=" ")
+                classif_df = compare(
+                    data, evaluation_df, km.centroids, length, method, K
                 )
+                classif_df["dataset_id"] = dataset_id
+                classif_dfs.append(classif_df)
+                print("Done.")
+        evaluation_df.to_sql("centroids_evaluation", engine, if_exists="append")
+        pd.concat(classif_dfs).to_sql(
+            "centroids_classification", engine, if_exists="append"
+        )
 
 
 def run():
     dataset_ids = get_ts_ids()
     for dataset_id in dataset_ids:
+        # if dataset_id in {81, 12, 99, 29, 5}:
+        # continue
         cluster_dataset(dataset_id)
 
 
 if __name__ == "__main__":
     set_num_threads(NUM_THREADS)
+    faiss.omp_set_num_threads(NUM_THREADS)
     run()
