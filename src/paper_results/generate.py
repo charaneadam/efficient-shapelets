@@ -9,7 +9,7 @@ from src.storage.database import SAME_LENGTH_CLASSIFICATION_TABLE_NAME
 from src.storage.database import VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME
 
 
-engine = create_engine("postgresql://postgres:pass@localhost:5432/test")
+engine = create_engine("postgresql://postgres:pass@localhost:5432/shapelets")
 
 fixed_length = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
 variable_length = pd.read_sql(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME, engine)
