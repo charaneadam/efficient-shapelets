@@ -30,10 +30,24 @@ def get_ts_ids():
 
 
 @njit(fastmath=True, parallel=True)
+def _compute_test_distances(X, candidates):
+    n_windows = len(candidates)
+    n_ts = X.shape[0]
+    distances = np.zeros((n_ts, n_windows))
+    for window_id in prange(n_windows):
+        window = candidates[window_id]
+        for ts_id in range(n_ts):
+            dist = distance_numba(X[ts_id], window)
+            distances[ts_id, window_id] = dist
+    return distances
+
+
+@njit(fastmath=True, parallel=True)
 def _eval_bruteforce(X, y, candidates, centroids_labels):
     n_windows = len(candidates)
     n_ts = X.shape[0]
     res = np.zeros((n_windows, 6))  # 6: 3 for sil,infogain,fstat, and 3 for time
+    distances = np.zeros((n_ts, n_windows))
     for window_id in prange(n_windows):
         window = candidates[window_id]
         window_label = centroids_labels[window_id]
@@ -41,6 +55,7 @@ def _eval_bruteforce(X, y, candidates, centroids_labels):
         for ts_id in range(n_ts):
             dist = distance_numba(X[ts_id], window)
             dists_to_ts[ts_id] = dist
+            distances[ts_id, window_id] = dist
 
         with objmode(start="f8"):
             start = perf_counter()
@@ -68,7 +83,7 @@ def _eval_bruteforce(X, y, candidates, centroids_labels):
         infogain_time = end - start
         res[window_id][4] = infgain_score
         res[window_id][5] = infogain_time
-    return res
+    return res, distances
 
 
 def assign_labels_to_centroids(data, wm, indices, n_centroids):
@@ -97,17 +112,22 @@ def assign_labels_to_centroids(data, wm, indices, n_centroids):
     return df
 
 
-def select_best_k(df, centroids, method, label, K):
+def select_best_k(df, method, label, K):
     indices = df[df.label == label].sort_values(by=method).index[:K]
-    return [centroids[idx] for idx in indices]
+    return indices
 
 
-def classify(df, data, centroids, method, K):
-    labels = set(data.y_train)
-    shapelets = []
+def get_transformed_data(df, labels, method, train_distances, test_distances, K):
+    indices = []
     for label in labels:
-        shapelets.extend(select_best_k(df, centroids, method, label, K))
-    X_tr, X_te = transform(data, shapelets)
+        indices.extend(select_best_k(df, method, label, K))
+    X_tr = train_distances[:, indices]
+    X_te = test_distances[:, indices]
+    return X_tr, X_te
+
+
+def classify(df, data, method, K, train_distances, test_distances):
+    X_tr, X_te = get_transformed_data(df, set(data.y_train), method, train_distances, test_distances, K)
     classification_results = {}
     with Pool(len(CLASSIFIERS_NAMES)) as p:
         results = [
@@ -122,8 +142,8 @@ def classify(df, data, centroids, method, K):
     return classification_results
 
 
-def compare(data, evaluation_df, centroids, window_length, method, K):
-    classif_res = classify(evaluation_df, data, centroids, method, K)
+def compare(data, evaluation_df, window_length, method, K, distances, test_distances):
+    classif_res = classify(evaluation_df, data, method, K, distances, test_distances)
     models_results = [
         classif_res[clf_name] + [method, K, window_length] + [clf_name]
         for clf_name in CLASSIFIERS_NAMES
@@ -168,7 +188,7 @@ def cluster_dataset(dataset_id):
         print("Done.\n\tEvaluating ...", end=" ")
         dists, indices = km.index.search(windows, 1)
         df = assign_labels_to_centroids(data, wm, indices, n_centroids)
-        scores_info = _eval_bruteforce(
+        scores_info, distances = _eval_bruteforce(
             data.X_train, data.y_train, km.centroids, df.label.values
         )
         scores = pd.DataFrame(
@@ -182,6 +202,7 @@ def cluster_dataset(dataset_id):
                 "gain time",
             ],
         )
+        test_distances = _compute_test_distances(data.X_test, km.centroids)
         evaluation_df = pd.concat([df, scores], axis=1)
         evaluation_df["dataset_id"] = dataset_id
         evaluation_df["window size"] = length
@@ -191,7 +212,7 @@ def cluster_dataset(dataset_id):
             for K in [3, 5, 10, 20, 50, 100]:
                 print(f"\tClassifying with {method} using {K} shapeletls", end=" ")
                 classif_df = compare(
-                    data, evaluation_df, km.centroids, length, method, K
+                    data, evaluation_df, length, method, K, distances, test_distances
                 )
                 classif_df["dataset_id"] = dataset_id
                 classif_dfs.append(classif_df)
