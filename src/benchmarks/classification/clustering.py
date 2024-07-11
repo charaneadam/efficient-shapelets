@@ -225,10 +225,15 @@ def cluster_dataset(dataset_id):
 
 def run():
     dataset_ids = get_ts_ids()
+    computed = set(pd.read_sql("SELECT DISTINCT dataset_id FROM centroids_classification", engine).values.squeeze())
     for dataset_id in dataset_ids:
-        # if dataset_id in {81, 12, 99, 29, 5}:
-        # continue
-        cluster_dataset(dataset_id)
+        if dataset_id in computed:
+            print(f"skipping dataset {dataset_id}")
+            continue
+        try:
+            cluster_dataset(dataset_id)
+        except:
+            print(f"Error occured wih dataset {dataset_id}")
 
 
 if __name__ == "__main__":
