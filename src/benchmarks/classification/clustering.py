@@ -182,7 +182,7 @@ def cluster_dataset(dataset_id):
         windows = wm.get_windows(data.X_train)
 
         print(f"\tClustering ...", end=" ")
-        n_centroids = windows.shape[0] // 20
+        n_centroids = windows.shape[0] // 10
         km = faiss.Kmeans(length, n_centroids)
         km.train(windows)
         print("Done.\n\tEvaluating ...", end=" ")
@@ -217,15 +217,15 @@ def cluster_dataset(dataset_id):
                 classif_df["dataset_id"] = dataset_id
                 classif_dfs.append(classif_df)
                 print("Done.")
-        evaluation_df.to_sql("centroids_evaluation", engine, if_exists="append")
+        evaluation_df.to_sql("centroids_evaluation_10", engine, if_exists="append")
         pd.concat(classif_dfs).to_sql(
-            "centroids_classification", engine, if_exists="append"
+            "centroids_classification_10", engine, if_exists="append"
         )
 
 
 def run():
     dataset_ids = get_ts_ids()
-    computed = set(pd.read_sql("SELECT DISTINCT dataset_id FROM centroids_classification", engine).values.squeeze())
+    computed = set(pd.read_sql("SELECT DISTINCT dataset_id FROM centroids_classification_10", engine).values.squeeze())
     for dataset_id in dataset_ids:
         if dataset_id in computed:
             print(f"skipping dataset {dataset_id}")
