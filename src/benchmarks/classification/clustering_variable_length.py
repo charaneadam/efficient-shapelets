@@ -75,7 +75,7 @@ def compute_gain(dists_to_ts, window_label, y):
     return infgain_score, infogain_time
 
 
-@njit(fastmath=True, parallel=True)
+# @jit(fastmath=True, parallel=True)
 def _eval_bruteforce(distances, y, candidates, centroids_labels):
     n_candidates = len(candidates)
     # 6: sil,infogain,fstat, and their times
@@ -104,6 +104,95 @@ def _eval_bruteforce(distances, y, candidates, centroids_labels):
     )
 
 
+def transform_with_top_K(
+    df, method, label, K, lengths, train_distances, test_distances
+):
+    view = df[df.label == label].sort_values(by=method, ascending=False)
+    if view.shape[0] == 0:
+        print(f"Problem: No centroids with label {label} found!")
+    lengths_remaps = {length: idx for idx, length in enumerate(lengths)}
+    X_tr = []
+    X_te = []
+    for index, length in view["window size"][:K].items():
+        length_index = lengths_remaps[length]
+        X_tr.append(train_distances[length_index][:, index])
+        X_te.append(test_distances[length_index][:, index])
+    return np.array(X_tr).T, np.array(X_te).T
+
+
+def get_transformed_data(
+    df, labels, method, lengths, train_distances, test_distances, K
+):
+    X_train = []
+    X_test = []
+    for label in labels:
+        X_tr, X_te = transform_with_top_K(
+            df, method, label, K, lengths, train_distances, test_distances
+        )
+        X_train.append(X_tr)
+        X_test.append(X_te)
+    for X in X_train:
+        print(X.shape)
+    X_train = np.concatenate(X_train, axis=1)
+    X_test = np.concatenate(X_test, axis=1)
+    return X_train, X_test
+
+
+def classify(df, data, method, K, train_distances, test_distances, lengths):
+    X_tr, X_te = get_transformed_data(
+        df, set(data.y_train), method, lengths, train_distances, test_distances, K
+    )
+    classification_results = {}
+    with Pool(len(CLASSIFIERS_NAMES)) as p:
+        results = [
+            p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test))
+            for clf_name in CLASSIFIERS_NAMES
+        ]
+        p.close()
+        p.join()
+    for res, clf_name in zip(results, CLASSIFIERS_NAMES):
+        fit_time, predict_time, acc, f1, labels, precision, recall = res.get()
+        classification_results[clf_name] = [acc, f1, fit_time, predict_time]
+    return classification_results
+
+
+def compare(data, evaluation_df, lengths, method, K, train_distances, test_distances):
+    classif_res = classify(
+        evaluation_df, data, method, K, train_distances, test_distances, lengths
+    )
+    models_results = [
+        classif_res[clf_name] + [method, K] + [clf_name]
+        for clf_name in CLASSIFIERS_NAMES
+    ]
+    cols = [
+        "accuracy",
+        "f1",
+        "fit time",
+        "test time",
+        "method",
+        "top_K",
+        "classifier",
+    ]
+    classif_results = pd.DataFrame(models_results, columns=cols)
+    return classif_results
+
+
+def get_data_and_lengths(dataset_id):
+    dataset_name = str(
+        pd.read_sql(
+            f"SELECT name FROM dataset WHERE id={dataset_id}", engine
+        ).values.squeeze()
+    )
+    data = Data(dataset_name)
+    lengths = pd.read_sql(
+        f"""SELECT DISTINCT window_size
+        FROM {SAME_LENGTH_CLASSIFICATION_TABLE_NAME}
+        WHERE dataset_id={dataset_id}""",
+        engine,
+    ).values.squeeze()
+    return data, lengths
+
+
 def assign_labels_to_centroids(data, wm, indices, n_centroids):
     clusters = [[] for _ in range(n_centroids)]
     for subsequence_index, centroid_index in enumerate(indices.squeeze()):
@@ -128,74 +217,6 @@ def assign_labels_to_centroids(data, wm, indices, n_centroids):
     cols = ["label", "popularity", "population size"]
     df = pd.DataFrame(centroids_info, columns=cols).sort_values(by=cols[-1])
     return df
-
-
-def select_best_k(df, method, label, K):
-    indices = df[df.label == label].sort_values(by=method).index[:K]
-    return indices
-
-
-def get_transformed_data(df, labels, method, train_distances, test_distances, K):
-    indices = []
-    for label in labels:
-        indices.extend(select_best_k(df, method, label, K))
-    X_tr = train_distances[:, indices]
-    X_te = test_distances[:, indices]
-    return X_tr, X_te
-
-
-def classify(df, data, method, K, train_distances, test_distances):
-    X_tr, X_te = get_transformed_data(
-        df, set(data.y_train), method, train_distances, test_distances, K
-    )
-    classification_results = {}
-    with Pool(len(CLASSIFIERS_NAMES)) as p:
-        results = [
-            p.apply_async(_classify, (clf_name, X_tr, data.y_train, X_te, data.y_test))
-            for clf_name in CLASSIFIERS_NAMES
-        ]
-        p.close()
-        p.join()
-    for res, clf_name in zip(results, CLASSIFIERS_NAMES):
-        fit_time, predict_time, acc, f1, labels, precision, recall = res.get()
-        classification_results[clf_name] = [acc, f1, fit_time, predict_time]
-    return classification_results
-
-
-def compare(data, evaluation_df, window_length, method, K, distances, test_distances):
-    classif_res = classify(evaluation_df, data, method, K, distances, test_distances)
-    models_results = [
-        classif_res[clf_name] + [method, K, window_length] + [clf_name]
-        for clf_name in CLASSIFIERS_NAMES
-    ]
-    cols = [
-        "accuracy",
-        "f1",
-        "fit time",
-        "test time",
-        "method",
-        "top_K",
-        "window_size",
-        "classifier",
-    ]
-    classif_results = pd.DataFrame(models_results, columns=cols)
-    return classif_results
-
-
-def get_data_and_lengths(dataset_id):
-    dataset_name = str(
-        pd.read_sql(
-            f"SELECT name FROM dataset WHERE id={dataset_id}", engine
-        ).values.squeeze()
-    )
-    data = Data(dataset_name)
-    lengths = pd.read_sql(
-        f"""SELECT DISTINCT window_size
-        FROM {SAME_LENGTH_CLASSIFICATION_TABLE_NAME}
-        WHERE dataset_id={dataset_id}""",
-        engine,
-    ).values.squeeze()
-    return data, lengths
 
 
 def get_centroids_and_info(data, length):
@@ -223,7 +244,7 @@ def get_evaluation_df(data, lengths):
         scores = _eval_bruteforce(train_dists, data.y_train, centroids, df.label.values)
         evaluation_df = pd.concat([df, scores], axis=1)
         evaluation_df["window size"] = length
-        evaluation_dfs.append(evaluation_dfs)
+        evaluation_dfs.append(evaluation_df)
     return pd.concat(evaluation_dfs), train_distances, test_distances
 
 
@@ -231,19 +252,19 @@ def cluster_dataset(dataset_id):
     data, lengths = get_data_and_lengths(dataset_id)
     evaluation_df, train_distances, test_distances = get_evaluation_df(data, lengths)
     evaluation_df["dataset_id"] = dataset_id
+    evaluation_df.to_sql("centroids_evaluation", engine, if_exists="append")
 
-    classif_dfs = []
     for method in ["silhouette", "gain", "fstat"]:
+        classif_dfs = []
         for K in [3, 5, 10, 20, 50, 100]:
             classif_df = compare(
                 data, evaluation_df, lengths, method, K, train_distances, test_distances
             )
             classif_df["dataset_id"] = dataset_id
             classif_dfs.append(classif_df)
-    evaluation_df.to_sql("centroids_evaluation", engine, if_exists="append")
-    pd.concat(classif_dfs).to_sql(
-        "centroids_classification", engine, if_exists="append"
-    )
+        pd.concat(classif_dfs).to_sql(
+            "centroids_classification", engine, if_exists="append"
+        )
 
 
 def run():
