@@ -131,8 +131,6 @@ def get_transformed_data(
         )
         X_train.append(X_tr)
         X_test.append(X_te)
-    for X in X_train:
-        print(X.shape)
     X_train = np.concatenate(X_train, axis=1)
     X_test = np.concatenate(X_test, axis=1)
     return X_train, X_test
@@ -270,7 +268,10 @@ def cluster_dataset(dataset_id):
 def run():
     dataset_ids = get_ts_ids()
     for dataset_id in dataset_ids:
-        cluster_dataset(dataset_id)
+        try:
+            cluster_dataset(dataset_id)
+        except:
+            f"Error occured with dataset {dataset_id}"
 
 
 if __name__ == "__main__":
