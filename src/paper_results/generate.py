@@ -185,6 +185,21 @@ def runtime_comparisons():
         text_file.write(df.to_latex())
 
 
+def variable_fixed_centroids_accuracy_comparison(df, method):
+    fig, ax = plt.subplots(figsize=(14 * cm, 5 * cm))
+    sns.boxplot(
+        df[df.method == method],
+        x="top_K",
+        y="accuracy",
+        hue="selection",
+        showfliers=False,
+        ax=ax,
+    )
+    ax.legend(loc="lower center", fancybox=True, framealpha=0.9, ncol=3)
+    fig.tight_layout()
+    fig.savefig("selection_methods_comparison.png")
+
+
 if __name__ == "__main__":
     if not os.path.exists("/results/"):
         os.makedirs("/results/")
