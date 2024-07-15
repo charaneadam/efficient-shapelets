@@ -6,7 +6,7 @@ import pandas as pd
 from numba import njit, objmode, prange
 import faiss
 
-from src.benchmarks.classification.utils import _classify, transform
+from src.benchmarks.classification.utils import _classify
 from src.benchmarks.windows_evaluation.utils import (
     distance_numba,
     fstat,
