@@ -267,11 +267,18 @@ def cluster_dataset(dataset_id):
 
 def run():
     dataset_ids = get_ts_ids()
+    times = []
     for dataset_id in dataset_ids:
         try:
+            start = perf_counter()
             cluster_dataset(dataset_id)
+            end = perf_counter()
+            time = end - start
+            times.append((dataset_id, time))
+            print(f"{dataset_id}: {time}")
         except:
             f"Error occured with dataset {dataset_id}"
+    print(times)
 
 
 if __name__ == "__main__":
