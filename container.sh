@@ -51,7 +51,7 @@ if [[ $# -ne 0 ]]; then
     podman exec -it $CONTAINER_NAME bash
   elif [[ $1 == "psql" ]]; then
     run_container_if_off
-    podman exec -it $CONTAINER_NAME psql -U postgres -d shapelets
+    podman exec -it $CONTAINER_NAME psql -U postgres -d $2
   elif [[ $1 == "run" ]]; then
     run_container_if_off
     podman exec $CONTAINER_NAME bash /scripts/run.sh $2
