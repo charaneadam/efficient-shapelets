@@ -220,7 +220,7 @@ def assign_labels_to_centroids(data, wm, indices, n_centroids):
 def get_centroids_and_info(data, length):
     wm = Windows(length)
     windows = wm.get_windows(data.X_train)
-    n_centroids = windows.shape[0] // 20
+    n_centroids = windows.shape[0] // np.sqrt(windows.shape[0])
     km = faiss.Kmeans(length, n_centroids)
     km.train(windows)
     dists, indices = km.index.search(windows, 1)
@@ -250,7 +250,7 @@ def cluster_dataset(dataset_id):
     data, lengths = get_data_and_lengths(dataset_id)
     evaluation_df, train_distances, test_distances = get_evaluation_df(data, lengths)
     evaluation_df["dataset_id"] = dataset_id
-    evaluation_df.to_sql("centroids_evaluation_variable", engine, if_exists="append")
+    evaluation_df.to_sql("centroids_evaluation_variable_sqrt", engine, if_exists="append")
 
     for method in ["silhouette", "gain", "fstat"]:
         classif_dfs = []
@@ -261,7 +261,7 @@ def cluster_dataset(dataset_id):
             classif_df["dataset_id"] = dataset_id
             classif_dfs.append(classif_df)
         pd.concat(classif_dfs).to_sql(
-            "centroids_classification_variable", engine, if_exists="append"
+            "centroids_classification_variable_sqrt", engine, if_exists="append"
         )
 
 
