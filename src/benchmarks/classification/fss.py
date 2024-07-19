@@ -3,11 +3,12 @@
 # License: MIT
 
 import random
-from datetime import datetime
 from time import perf_counter
 import numpy
 import pandas as pd
 
+from numba import set_num_threads
+from src.config import NUM_THREADS
 
 from src.exceptions import TransformationFailrue
 from src.storage.database import engine
@@ -15,10 +16,9 @@ from src.benchmarks.classification.clustering_variable_length import (
     compute_distances_shapelets_ts,
     _eval_bruteforce,
 )
+from src.classifiers import CLASSIFIERS_NAMES
 from src.benchmarks.classification.utils import _transform, _classify
 from src.storage.data import Data
-
-random.seed(datetime.now())
 
 
 def argmin(iterable):
@@ -402,15 +402,17 @@ def run_dataset(dataset_id):
     candidates, distances, labels = candidates_distances_labels(data, fss)
     end = perf_counter()
     runtime = end - start
-    print(f"Distances computation time: {runtime}")
 
     Ks = get_Ks(fss)
     if len(Ks) > 0:
         classify(dataset_id, data, candidates, distances, Ks, labels)
     else:
-        print(
+        msg = (
             f"Problem with dataset {dataset_id}: All labels should have some candidates"
         )
+        f = open("errors_fss.txt", "a")
+        f.write(msg)
+        f.close()
 
 
 def _precompute_test_distances_per_method(data, candidates, method, df, max_k):
@@ -442,9 +444,9 @@ def classify(dataset_id, data, candidates, distances, Ks, labels):
     for method in methods:
         start = perf_counter()
         df = _eval_bruteforce(distances, data.y_train, candidates, labels)
-        df.to_sql("fss_evaluation", engine)
         end = perf_counter()
-        print(f"Evaluation time: {end-start}")
+        df["dataset_id"] = dataset_id
+        df.to_sql("fss_evaluation", engine, if_exists="append")
         df["label"] = labels
         shapelets_indices, shapelets_distances = _precompute_test_distances_per_method(
             data, candidates, method, df, Ks[-1]
@@ -454,13 +456,13 @@ def classify(dataset_id, data, candidates, distances, Ks, labels):
             X_tr, X_te = _get_transformed_data(
                 labels, k, distances, shapelets_indices, shapelets_distances
             )
-            classifier = "Logistic Regression"
-            fit_time, predict_time, acc, f1, _, _, _ = _classify(
-                classifier, X_tr, data.y_train, X_te, data.y_test
-            )
-            results.append(
-                [dataset_id, method, acc, f1, k, classifier, fit_time, predict_time]
-            )
+            for classifier in CLASSIFIERS_NAMES:
+                fit_time, predict_time, acc, f1, _, _, _ = _classify(
+                    classifier, X_tr, data.y_train, X_te, data.y_test
+                )
+                results.append(
+                    [dataset_id, method, acc, f1, k, classifier, fit_time, predict_time]
+                )
         res_df = pd.DataFrame(
             results,
             columns=[
@@ -468,9 +470,24 @@ def classify(dataset_id, data, candidates, distances, Ks, labels):
                 "method",
                 "accuracy",
                 "f1",
+                "top_K",
                 "classifier",
                 "fit_time",
                 "predict_time",
             ],
         )
-        res_df.to_sql("fss_classification", engine)
+        res_df.to_sql("fss_classification", engine, if_exists="append")
+
+
+def run():
+    query = "SELECT id from dataset WHERE id in (SELECT DISTINCT dataset_id FROM centroids_classification_variable) ORDER BY length*train;"
+    for dataset_id in list(pd.read_sql(query, engine).id.values):
+        try:
+            run_dataset(dataset_id)
+        except:
+            print(f"Error eccured with dataset {dataset_id}")
+
+
+if __name__ == "__main__":
+    set_num_threads(NUM_THREADS)
+    run()
