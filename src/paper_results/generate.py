@@ -9,7 +9,7 @@ from src.storage.database import SAME_LENGTH_CLASSIFICATION_TABLE_NAME
 from src.storage.database import VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME
 
 
-engine = create_engine("postgresql://postgres:pass@localhost:5432/shapelets")
+engine = create_engine("postgresql://postgres:pass@localhost:5432/paper")
 
 fixed_length = pd.read_sql(SAME_LENGTH_CLASSIFICATION_TABLE_NAME, engine)
 variable_length = pd.read_sql(VARIABLE_CLASSIFICATION_LENGTH_TABLE_NAME, engine)
@@ -78,6 +78,7 @@ def distribution_of_difference_between_accuracies():
     )
     ax.axhline(y=0, color="black", linestyle="-")
     ax.legend(fancybox=True, framealpha=0.9, ncol=3)
+    ax.set_ylabel("Difference of accuracy")
     fig.tight_layout()
     fig.savefig("/results/dist_diff_accuracies.png")
     fig.savefig("/code/results/dist_diff_accuracies.png")
@@ -89,7 +90,7 @@ def accuracy_plot(K_shapelets=5):
     sns.scatterplot(
         variable_length[variable_length.K_shapelets == K_shapelets],
         x="dataset_id",
-        y="RBF SVM",
+        y="Logistic Regression",
         hue="method",
         ax=ax,
         palette=palette,
