@@ -58,7 +58,14 @@ class DemoData:
                 rng_start = silhouettes[label_idx][ax_idx][0][0]
                 rng_end = rng_start + self._window_size
                 rng = np.arange(rng_start, rng_end)
-                ax.plot(rng, ts[rng] + label_idx * 4, color="black")
+                ax.plot(rng, ts[rng] + label_idx * 4, color="white")
+                ax.plot(
+                    rng,
+                    ts[rng] + label_idx * 4,
+                    color="black",
+                    # linestyle="--",
+                    linewidth=3,
+                )
             ax.get_yaxis().set_visible(False)
 
     def plot(self, plot_shapelets=False, silhouettes=None):
