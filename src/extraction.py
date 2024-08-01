@@ -109,6 +109,7 @@ class FSS:
             mapper = {idx: id for idx, id in enumerate(ts_ids_by_label)}
             positions, candidates = fss.transform(X_train[ts_ids_by_label])
             for i in range(len(positions)):
+                candidates[i] = normalize(candidates[i])
                 positions[i][0] = mapper[positions[i][0]]
             self.candidates[label] = candidates
             self.candidates_positions[label] = positions

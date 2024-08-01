@@ -13,13 +13,6 @@ from src.exceptions import TransformationFailrue, NormalizationFailure
 random.seed(datetime.now())
 
 
-def normalize(candidate):
-    try:
-        return (candidate - numpy.mean(candidate)) / numpy.std(candidate)
-    except:
-        raise NormalizationFailure
-
-
 def argmin(iterable):
     return min(enumerate(iterable), key=lambda x: x[1])[0]
 
@@ -324,7 +317,6 @@ class FastShapeletCandidates:
                 # TODO, store begin and end positions for ts
                 shapelet_candidate = ts[begin:end]
                 candidates_positions.append([ts_idx, begin, end])
-                shapelet_candidate = normalize(shapelet_candidate)
                 l_shapelet_candidates.append(shapelet_candidate)
         return candidates_positions, l_shapelet_candidates
 
