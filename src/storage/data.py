@@ -55,7 +55,7 @@ class Windows:
         # Z-normalize the windows
         res = StandardScaler().fit_transform(res.T).T
 
-        return res.astype('float32')
+        return res.astype("float32")
 
     def get_ts_index_of_window(self, window_index):
         # This method returns the index of the time series from which a
@@ -105,3 +105,12 @@ def init_ucr_metadata(db, mark_ts_with_nan=True):
             except DataFailure:
                 dataset.missing_values = True
                 dataset.save()
+
+
+def get_datasets_info():
+    import pandas as pd
+    from src.storage.database import paper_engine
+
+    query = """SELECT id, name, train, test, n_classes, length 
+                FROM dataset ORDER BY train*length"""
+    return pd.read_sql(query, paper_engine)
