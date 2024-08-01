@@ -2,6 +2,7 @@ import numpy as np
 
 from src.exceptions import NormalizationFailure
 from src.storage.data import Data
+from src.methods.fss import FastShapeletCandidates
 
 
 def normalize(candidate):
@@ -92,11 +93,25 @@ class VariableLength:
 
 
 class FSS:
-    def __init__(self, dataset_info) -> None:
-        self.data_info = dataset_info
+    def __init__(self, data) -> None:
+        self.data: Data = data
+        self.candidates = dict()
+        self.candidates_positions = dict()
 
     def generate_candidates(self):
-        pass
+        X_train = self.data.X_train
+        # n_lfdp and std are the recommended parameters of the authors of FSS
+        n_lfdp = int(X_train.shape[1] * 0.05 + 2)
+        std = 0.5
+        fss = FastShapeletCandidates(n_lfdp, std)
+        for label in self.data.labels:
+            ts_ids_by_label = np.where(self.data.y_train == label)[0]
+            mapper = {idx: id for idx, id in enumerate(ts_ids_by_label)}
+            positions, candidates = fss.transform(X_train[ts_ids_by_label])
+            for i in range(len(positions)):
+                positions[i][0] = mapper[positions[i][0]]
+            self.candidates[label] = candidates
+            self.candidates_positions[label] = positions
 
 
 class Centroids:
