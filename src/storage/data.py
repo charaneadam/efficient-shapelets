@@ -55,7 +55,7 @@ class Windows:
         # Z-normalize the windows
         res = StandardScaler().fit_transform(res.T).T
 
-        return res
+        return res.astype('float32')
 
     def get_ts_index_of_window(self, window_index):
         # This method returns the index of the time series from which a
