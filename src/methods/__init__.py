@@ -2,7 +2,7 @@ from .learning_shapelets import LearningShapeletsTransform
 from .nn_shapelets import NearestNeighborTransform
 from .randomShapelets import RandomShapeletTransform
 from .randomShapelets import RandomDilatedShapeletTransform
-from .fss import FastShapeletSelectionTransform
+# from .fss import FastShapeletSelectionTransform
 from .clustering import KmeansTransform
 
 
@@ -10,7 +10,7 @@ SELECTION_METHODS = {
     "RandomDilatedShapelets": RandomDilatedShapeletTransform,
     "RandomShapelets": RandomShapeletTransform,
     "LearningShapelets": LearningShapeletsTransform,
-    "FastShapeletSelection": FastShapeletSelectionTransform,
+    # "FastShapeletSelection": FastShapeletSelectionTransform,
     "NearestNeighbor": NearestNeighborTransform,
     "Kmeans": KmeansTransform,
 }

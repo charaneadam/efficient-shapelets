@@ -8,9 +8,16 @@ from scipy.spatial.distance import cdist
 import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
-from src.exceptions import TransformationFailrue
+from src.exceptions import TransformationFailrue, NormalizationFailure
 
 random.seed(datetime.now())
+
+
+def normalize(candidate):
+    try:
+        return (candidate - numpy.mean(candidate)) / numpy.std(candidate)
+    except:
+        raise NormalizationFailure
 
 
 def argmin(iterable):
@@ -60,7 +67,7 @@ class FastShapeletCandidates:
         """
         mean = self._mean_over_ts(l_ts)
         i_criteria = argmin([abs(numpy.sum(ts) - mean) for ts in l_ts])
-        return l_ts[i_criteria]
+        return i_criteria, l_ts[i_criteria]
 
     def _get_ordered_ed_to_criteria(self, l_ts, criteria):
         """
@@ -119,7 +126,7 @@ class FastShapeletCandidates:
         :rtype: list of list of array(float)
         """
         # get the criteria time series
-        criteria_ts = self._get_criteria_ts(l_ts_c)
+        criteria_index, criteria_ts = self._get_criteria_ts(l_ts_c)
 
         l_dists = self._get_ordered_ed_to_criteria(l_ts_c, criteria_ts)
         l_adj_discr = self._calc_adjacent_discrepancies(l_dists[1:])
@@ -136,8 +143,9 @@ class FastShapeletCandidates:
         subclasses_ts = [
             [l_ts_c[j] for j, _ in subclass] for subclass in subclasses_dists
         ]
+        subclasses_ts_ids = [[j for j, _ in subclass] for subclass in subclasses_dists]
 
-        return subclasses_ts
+        return subclasses_ts_ids, subclasses_ts
 
     def _sample_ts_from_class(self, l_ts_c):
         """
@@ -150,12 +158,19 @@ class FastShapeletCandidates:
         :rtype: list of array(float)
         """
 
-        subclasses = self._split_class_to_subclasses(l_ts_c)
+        ids, subclasses = self._split_class_to_subclasses(l_ts_c)
 
-        sample = [
-            subclass[random.randint(0, len(subclass) - 1)] for subclass in subclasses
-        ]
-        return sample
+        # sample = [
+        # subclass[random.randint(0, len(subclass) - 1)] for subclass in subclasses
+        # ]
+        sample = []
+        sample_ids = []
+
+        for subclass_idx, subclass in enumerate(subclasses):
+            idx = random.randint(0, len(subclass) - 1)
+            sample.append(subclass[idx])
+            sample_ids.append(ids[subclass_idx][idx])
+        return sample_ids, sample
 
     def _get_dists_to_fitting_line(self, segment):
         """
@@ -289,7 +304,7 @@ class FastShapeletCandidates:
 
         return sorted(l_lfdp)
 
-    def _generate_shapelet_candidates_from_LFDPs(self, ts, l_lfdp):
+    def _generate_shapelet_candidates_from_LFDPs(self, ts_idx, ts, l_lfdp):
         """
         Generate a list of shapelet candidates from a given time series and already extracted LFDPs.
         :param ts: a time series to sample shapelet candidates from
@@ -300,13 +315,18 @@ class FastShapeletCandidates:
         :rtype: list of array(float)
         """
         l_shapelet_candidates = []
+        candidates_positions = []
         for j in range(len(l_lfdp) - 3):
             begin = l_lfdp[j]
             for i in range(j + 2, len(l_lfdp) - 1):
                 end = l_lfdp[i]
+                # print(begin, end)
+                # TODO, store begin and end positions for ts
                 shapelet_candidate = ts[begin:end]
+                candidates_positions.append([ts_idx, begin, end])
+                shapelet_candidate = normalize(shapelet_candidate)
                 l_shapelet_candidates.append(shapelet_candidate)
-        return l_shapelet_candidates
+        return candidates_positions, l_shapelet_candidates
 
     def transform(self, X):
         """
@@ -320,17 +340,21 @@ class FastShapeletCandidates:
         :rtype:
         """
         shapelet_candidates = []
+        shapelets_positions = []
 
         # sample time series
-        l_ts_samples = self._sample_ts_from_class(X)
+        sample_ids, l_ts_samples = self._sample_ts_from_class(X)
 
         # sample shapelet candidates
-        for ts in l_ts_samples:
+        for ts_idx, ts in zip(sample_ids, l_ts_samples):
             lfdps = self.identify_LFDPs_of_ts(ts)
-            new_candidates = self._generate_shapelet_candidates_from_LFDPs(ts, lfdps)
+            positions, new_candidates = self._generate_shapelet_candidates_from_LFDPs(
+                ts_idx, ts, lfdps
+            )
             shapelet_candidates += new_candidates
+            shapelets_positions += positions
 
-        return shapelet_candidates
+        return shapelets_positions, shapelet_candidates
 
 
 class FastShapeletSelectionTransform:
