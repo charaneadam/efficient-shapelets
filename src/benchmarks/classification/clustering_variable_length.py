@@ -220,7 +220,7 @@ def assign_labels_to_centroids(data, wm, indices, n_centroids):
 def get_centroids_and_info(data, length):
     wm = Windows(length)
     windows = wm.get_windows(data.X_train)
-    n_centroids = windows.shape[0] // np.sqrt(windows.shape[0])
+    n_centroids = windows.shape[0] // 10
     km = faiss.Kmeans(length, n_centroids)
     km.train(windows)
     dists, indices = km.index.search(windows, 1)
