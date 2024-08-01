@@ -69,6 +69,7 @@ class Data:
         self.X_train, self.y_train = get_dataset(dataset_name, train=True)
         self.X_test, self.y_test = get_dataset(dataset_name, train=False)
         self.n_ts, self.ts_length = self.X_train.shape
+        self.labels = sorted(np.unique(self.y_test))
 
 
 class Dataset(BaseModel):
