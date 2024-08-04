@@ -118,3 +118,45 @@ def info_gain(dists_to_ts, label, y, ts_idx=-1):
         info = gain_before_split - gain
         quality = max(info, quality)
     return quality
+
+
+@njit(fastmath=True)
+def info_gain_orig(dists_to_ts, lbl, y, ts_idx=-1):
+    labels = np.unique(y)
+    n_ts = len(dists_to_ts)
+
+    count_labels_left = {label: 0 for label in labels}
+    count_labels_right = {label: 0 for label in labels}
+    for label in y:
+        count_labels_right[label] += 1
+
+    gain_before_split = 0
+    for count in count_labels_right.values():
+        p = count / n_ts
+        gain_before_split -= p * np.log2(p)
+
+    dists_ts_indices = [(dist, idx) for idx, dist in enumerate(dists_to_ts)]
+    sorted_dists = sorted(dists_ts_indices)
+
+    quality = 0
+    for split_point in range(1, n_ts - 1):
+        _, idx = sorted_dists[split_point - 1]
+        count_labels_left[y[idx]] += 1
+        count_labels_right[y[idx]] -= 1
+
+        entropy_left, entropy_right = 0, 0
+        for count in count_labels_left.values():
+            if count == 0:
+                continue
+            p = count / split_point
+            entropy_left -= p * np.log2(p)
+        for count in count_labels_right.values():
+            if count == 0:
+                continue
+            p = count / (n_ts - split_point)
+            entropy_right -= p * np.log2(p)
+        gain = gain_before_split
+        gain -= (split_point / n_ts) * entropy_left
+        gain += ((n_ts - split_point) / n_ts) * entropy_right
+        quality = max(quality, gain)
+    return quality
