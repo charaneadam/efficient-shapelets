@@ -127,8 +127,8 @@ class Centroids:
 
     def generate_candidates(self):
         for label in self.data.labels:
-            label_positions = np.where(self.data.y_train == label)[0]
-            data_label_view = self.data.X_train[label_positions]
+            ids_ts_label = np.where(self.data.y_train == label)[0]
+            data_label_view = self.data.X_train[ids_ts_label]
 
             self.candidates_positions[label] = []
             self.candidates[label] = []
@@ -140,7 +140,8 @@ class Centroids:
                     data_label_view, (1, length)
                 )
                 n_ts, n_windows_per_ts, _, _ = data_label_windows.shape
-                assert n_ts == sum(self.data.y_train == label)
+                # assert n_ts == sum(self.data.y_train == label)
+                # assert n_windows_per_ts == self.data.ts_length - length + 1
 
                 n_total_windows = n_ts * n_windows_per_ts
                 n_centroids = int(np.sqrt(n_total_windows))
@@ -161,7 +162,8 @@ class Centroids:
                         np.argmin(dists[centroid_windows])
                     ]
                     ts_idx = index_window_minimal_distance // n_windows_per_ts
-                    ts_id = label_positions[ts_idx]
+                    ts_id = ids_ts_label[ts_idx]
+                    # assert label == self.data.y_train[ts_id]
                     start = index_window_minimal_distance % n_windows_per_ts
                     end = start + length
                     self.candidates_positions[label].append([ts_id, start, end])
