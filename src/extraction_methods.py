@@ -155,6 +155,8 @@ class Centroids:
 
                 for centroid_index in range(n_centroids):
                     centroid_windows = np.where(indices == centroid_index)[0]
+                    if len(centroid_windows) == 0:
+                        continue
                     index_window_minimal_distance = centroid_windows[
                         np.argmin(dists[centroid_windows])
                     ]
