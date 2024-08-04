@@ -1,20 +1,22 @@
 import numpy as np
 from numba import njit
 
+EPS = 0.0000001
+
 
 @njit(fastmath=True)
 def distance_numba(ts: np.ndarray, shapelet: np.ndarray):
     n = ts.shape[0]
     length = shapelet.shape[0]
     min_dist = np.inf
-    shapelet = (shapelet - np.mean(shapelet)) / np.std(shapelet)
+    shapelet = (shapelet - np.mean(shapelet)) / max(np.std(shapelet), EPS)
     for i in range(n - length + 1):
         distance = 0.0
         x = ts[i : i + length]
         mu = np.mean(x)
         std = np.std(x)
         for j in range(length):
-            difference = (x[j] - mu) / std - shapelet[j]
+            difference = ((x[j] - mu) / max(std, EPS)) - shapelet[j]
             distance += difference * difference
             if distance >= min_dist:
                 break
@@ -39,6 +41,8 @@ def silhouette(dists_to_ts, label, y, ts_idx=-1):
     a /= cnta
     b /= cntb
     mx = a if a > b else b
+    if mx == 0:
+        mx = 1
     return (b - a) / mx
 
 
@@ -78,6 +82,7 @@ def fstat(dists_to_ts, label, y, ts_idx=-1):
         within_group_variability += diff * diff
     within_group_variability /= n_ts - n_labels
 
+    within_group_variability = max(within_group_variability, EPS)
     return between_group_variability / within_group_variability
 
 
