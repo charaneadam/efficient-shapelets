@@ -109,6 +109,5 @@ if __name__ == "__main__":
         except DataFailure as e:
             print(e)
             continue
-        # for method_id in EXTRACTION_METHODS.keys():
-        for method_id in [8]:
+        for method_id in EXTRACTION_METHODS.keys():
             extract(data, dataset_id, method_id)
