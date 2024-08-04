@@ -126,8 +126,7 @@ class Centroids:
         self.candidates_positions = dict()
 
     def generate_candidates(self):
-        # for label in self.data.labels:
-        for label in [1,2,3]:
+        for label in self.data.labels:
             label_positions = np.where(self.data.y_train == label)[0]
             data_label_view = self.data.X_train[label_positions]
 
