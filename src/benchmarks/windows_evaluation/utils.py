@@ -7,11 +7,14 @@ def distance_numba(ts: np.ndarray, shapelet: np.ndarray):
     n = ts.shape[0]
     length = shapelet.shape[0]
     min_dist = np.inf
+    shapelet = (shapelet - np.mean(shapelet)) / np.std(shapelet)
     for i in range(n - length + 1):
         distance = 0.0
         x = ts[i : i + length]
+        mu = np.mean(x)
+        std = np.std(x)
         for j in range(length):
-            difference = x[j] - shapelet[j]
+            difference = (x[j]-mu)/std - shapelet[j]
             distance += difference * difference
             if distance >= min_dist:
                 break
