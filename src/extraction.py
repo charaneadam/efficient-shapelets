@@ -4,7 +4,60 @@ import pandas as pd
 from src.exceptions import DataFailure
 from src.storage.database import fix_engine
 
-from src.extraction_methods import ExtractionMethod, EXTRACTION_METHODS
+from src.extraction_methods import FixedLength, VariableLength, Centroids, FSS
+
+
+EXTRACTION_METHODS = {
+    0: {
+        "class": FixedLength,
+        "params": {"window_length": 0.05},
+        "name": "Fixed length 5%",
+    },
+    1: {
+        "class": FixedLength,
+        "params": {"window_length": 0.1},
+        "name": "Fixed length 10%",
+    },
+    2: {
+        "class": FixedLength,
+        "params": {"window_length": 0.2},
+        "name": "Fixed length 20%",
+    },
+    3: {
+        "class": FixedLength,
+        "params": {"window_length": 0.3},
+        "name": "Fixed length 30%",
+    },
+    4: {
+        "class": FixedLength,
+        "params": {"window_length": 0.4},
+        "name": "Fixed length 40%",
+    },
+    5: {
+        "class": FixedLength,
+        "params": {"window_length": 0.5},
+        "name": "Fixed length 50%",
+    },
+    6: {"class": VariableLength, "params": {}, "name": "Random variable length"},
+    7: {"class": FSS, "params": {}, "name": "Fast Shapelet Transform"},
+    8: {"class": Centroids, "name": "Clustering"},
+}
+
+
+class ExtractionMethod:
+    def __init__(self, data, method_id) -> None:
+        self.id = method_id
+        method = EXTRACTION_METHODS[method_id]
+        self.method = method["class"](data, **method["params"])
+
+    def extract(self):
+        self.method.generate_candidates()
+
+    def candidates(self):
+        return self.method.candidates
+
+    def candidates_positions(self):
+        return self.method.candidates_positions
 
 
 def extract(data, dataset_id, method_id):
