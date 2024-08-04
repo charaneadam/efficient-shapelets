@@ -14,7 +14,7 @@ def distance_numba(ts: np.ndarray, shapelet: np.ndarray):
         mu = np.mean(x)
         std = np.std(x)
         for j in range(length):
-            difference = (x[j]-mu)/std - shapelet[j]
+            difference = (x[j] - mu) / std - shapelet[j]
             distance += difference * difference
             if distance >= min_dist:
                 break
@@ -124,7 +124,7 @@ def info_gain(dists_to_ts, label, y, ts_idx=-1):
 
 
 @njit(fastmath=True)
-def info_gain_orig(dists_to_ts, lbl, y, ts_idx=-1):
+def info_gain_multiclass(dists_to_ts, lbl, y, ts_idx=-1):
     labels = np.unique(y)
     n_ts = len(dists_to_ts)
 
