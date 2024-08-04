@@ -40,7 +40,7 @@ EXTRACTION_METHODS = {
     },
     6: {"class": VariableLength, "params": {}, "name": "Random variable length"},
     7: {"class": FSS, "params": {}, "name": "Fast Shapelet Transform"},
-    8: {"class": Centroids, "name": "Clustering"},
+    8: {"class": Centroids, "params": {}, "name": "Clustering"},
 }
 
 
@@ -65,21 +65,41 @@ def extract(data, dataset_id, method_id):
     method = ExtractionMethod(data, method_id)
     method.extract()
     end = perf_counter()
+    extraction_time = end - start
+
+    with fix_engine.connect() as conn:
+        query = f"""INSERT INTO extraction_time VALUES
+        ({dataset_id}, {method_id}, {extraction_time})"""
+        conn.execute(text(query))
+        conn.commit()
+
     positions = method.candidates_positions()
     dfs = []
     for label in positions.keys():
-        df = pd.DataFrame(positions[label], columns=["ts", "start", "end"])
+        df = pd.DataFrame(positions[label], columns=["ts", "first", "last"])
         df["label"] = label
         df["dataset"] = dataset_id
         df["method"] = method_id
         dfs.append(df)
     df = pd.concat(dfs)
-    candidates = df[["dataset", "method", "ts", "label", "start", "end"]]
+    candidates = df[["dataset", "method", "ts", "label", "first", "last"]]
     candidates.to_sql("candidates", fix_engine, if_exists="append", index=False)
+    return candidates
 
 
 if __name__ == "__main__":
+    from sqlalchemy import text
     from src.storage.data import get_datasets_info, Data
+
+    _create_table_candidates = """CREATE TABLE IF NOT EXISTS candidates
+    (id SERIAL PRIMARY KEY, dataset INT, method INT, ts INT,
+     label INT, first INT, last INT)"""
+    _create_table_extraction_time = """CREATE TABLE IF NOT EXISTS extraction_time
+     (dataset BIGINT, method INT, time DECIMAL)"""
+    with fix_engine.connect() as conn:
+        conn.execute(text(_create_table_candidates))
+        conn.execute(text(_create_table_extraction_time))
+        conn.commit()
 
     info_df = get_datasets_info()
     info_df = info_df[info_df.length >= 60]
@@ -89,5 +109,6 @@ if __name__ == "__main__":
         except DataFailure as e:
             print(e)
             continue
-        for method_id in EXTRACTION_METHODS.keys():
+        # for method_id in EXTRACTION_METHODS.keys():
+        for method_id in [8]:
             extract(data, dataset_id, method_id)
