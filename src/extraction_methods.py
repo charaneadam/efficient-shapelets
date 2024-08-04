@@ -138,8 +138,8 @@ class Centroids:
             ):
                 data_label_windows = sliding_window_view(
                     data_label_view, (1, length)
-                ).squeeze()
-                n_ts, n_windows_per_ts, _ = data_label_windows.shape
+                )
+                n_ts, n_windows_per_ts, _, _ = data_label_windows.shape
                 assert n_ts == sum(self.data.y_train == label)
 
                 n_total_windows = n_ts * n_windows_per_ts
