@@ -10,5 +10,9 @@ class ClassificationFailure(Exception):
     pass
 
 
+class NumberShapeletsFailure(Exception):
+    pass
+
+
 class NormalizationFailure(Exception):
     pass
