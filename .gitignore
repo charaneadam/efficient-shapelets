@@ -1,3 +1,7 @@
+*.log
+*.gzip
+*.txt
+*.in
 results/
 *.png
 *.sql
