@@ -14,6 +14,7 @@ db_peewee = PostgresqlDatabase(
 
 engine = create_engine("postgresql://postgres:pass@localhost:5432/shapelets")
 paper_engine = create_engine("postgresql://postgres:pass@localhost:5432/paper")
+fix_engine = create_engine("postgresql://postgres:pass@localhost:5432/fix")
 
 
 class BaseModel(Model):
