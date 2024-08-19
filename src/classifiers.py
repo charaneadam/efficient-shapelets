@@ -6,7 +6,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
 
-CLASSIFIERS = {
+CLASSIFIERS_MODELS = {
     "Logistic Regression": LogisticRegression,
     # "Linear SVM": SVC,
     # "RBF SVM": SVC,
@@ -16,7 +16,15 @@ CLASSIFIERS = {
     # "Ada Boost": AdaBoostClassifier,
 }
 
-CLASSIFIERS_NAMES = sorted(list(CLASSIFIERS.keys()))
+CLASSIFIERS_IDS = {
+    "Logistic Regression": 0,
+    # "Linear SVM": 1,
+    # "RBF SVM": 2,
+    "Gaussian Process": 3,
+    "Decision Tree": 4,
+    "Random Forest": 5,
+    # "Ada Boost": 6
+}
 
 DEFAULT_CLASSIFIERS_PARAMS = {
     "Logistic Regression": {"solver": "liblinear"},
@@ -31,7 +39,7 @@ DEFAULT_CLASSIFIERS_PARAMS = {
 
 class Classifier:
     def __init__(self, classifier_name):
-        _alg = CLASSIFIERS[classifier_name]
+        _alg = CLASSIFIERS_MODELS[classifier_name]
         params = DEFAULT_CLASSIFIERS_PARAMS.get(classifier_name, {})
         self._alg = _alg(**params)
 

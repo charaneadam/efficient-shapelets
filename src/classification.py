@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
+from src.classifiers import CLASSIFIERS_IDS
 from src.storage.database import fix_engine, paper_engine
 
-from src.storage.database import fix_engine
 from src.storage.data import Data
 from src.benchmarks.windows_evaluation.utils import distance_numba
 from src.benchmarks.classification.utils import _classify
@@ -91,10 +91,11 @@ def classify(X_tr, y_tr, X_te, y_te):
             continue
         Xtr = np.concatenate([X_tr[:, s : s + k] for s in starts], axis=1)
         Xte = np.concatenate([X_te[:, s : s + k] for s in starts], axis=1)
-        fit_time, predict_time, acc, f1, labels, precision, recall = _classify(
-            "Logistic Regression", Xtr, y_tr, Xte, y_te
-        )
-        results.append([k, acc, f1, fit_time, predict_time])
+        for model_name, model_id in CLASSIFIERS_IDS.items():
+            fit_time, predict_time, acc, f1, labels, precision, recall = _classify(
+                model_name, Xtr, y_tr, Xte, y_te
+            )
+            results.append([model_id, k, acc, f1, fit_time, predict_time])
     return results
 
 
@@ -102,21 +103,22 @@ def classify_dataset(dataset_id, dataset_name):
     data = Data(dataset_name)
     for extraction_methond_id in [6, 7, 8]:
         info = candidates_info(dataset_id, extraction_methond_id)
-        for evaluation_method in [
-            "silhouette",
-            "fstat",
-            "binary info",
-            "multiclass info",
+        for evaluation_method, evaluation_method_id in [
+            ("silhouette", 0),
+            ("fstat", 1),
+            ("binary info", 2),
+            ("multiclass info", 3),
         ]:
             X_tr, X_te = transform(data, info, evaluation_method)
             if X_tr is None or X_te is None:
                 continue
             results = classify(X_tr, data.y_train, X_te, data.y_test)
             results = pd.DataFrame(
-                results, columns=["k", "accuracy", "f1", "fit time", "predict time"]
+                results,
+                columns=["model", "k", "accuracy", "f1", "fit time", "predict time"],
             )
             results["dataset"] = dataset_id
-            results["evaluation"] = evaluation_method
+            results["evaluation"] = evaluation_method_id
             results["extraction"] = extraction_methond_id
             results.to_sql(
                 "classification", fix_engine, if_exists="append", index=False

@@ -7,7 +7,7 @@ from sklearn.metrics import (
     precision_recall_fscore_support as precision_recall,
 )
 from src.benchmarks.windows_evaluation.utils import distance_numba
-from src.classifiers import CLASSIFIERS, Classifier
+from src.classifiers import CLASSIFIERS_MODELS, Classifier
 from .db import (
     ClassificationModel,
     ClassificationResult,
@@ -47,6 +47,7 @@ def _classify(model_name, X_tr, y_tr, X_te, y_te):
     )
     acc, f1, labels, precision, recall = _get_classif_metrics(y_pred, y_te)
     return fit_time, predict_time, acc, f1, labels, precision, recall
+
 
 @njit(parallel=True)
 def _transform(X, shapelets):
@@ -103,7 +104,7 @@ def _save(
 
 
 def insert_classifiers_names():
-    for classifier_name in CLASSIFIERS.keys():
+    for classifier_name in CLASSIFIERS_MODELS.keys():
         ClassificationModel.create(name=classifier_name)
 
 
