@@ -3,9 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+RESULTS_DATA = "results/data/"
+RESULTS_PATH = "results/"
+PLOTS_PATH = RESULTS_PATH + "imgs/"
 
-if not os.path.isdir("results/imgs"):
-    os.mkdir("results/imgs")
+if not os.path.isdir(PLOTS_PATH):
+    os.mkdir(PLOTS_PATH)
 
 
 # Figure configs
@@ -23,7 +26,7 @@ extraction_order = ["clustering", "FSS"]
 # Extraction time
 fig, ax = plt.subplots(figsize=(14 * cm, 6 * cm))
 sns.scatterplot(
-    pd.read_parquet("results/data/extraction.parquet.gzip"),
+    pd.read_parquet(RESULTS_DATA + "extraction.parquet.gzip"),
     x="numcandidates",
     y="time",
     hue="extraction",
@@ -34,13 +37,13 @@ ax.set_xlabel("Number of possible subsequences")
 ax.set_ylabel("Shapelet extraction\nTime (s)")
 ax.set_xscale("log")
 fig.tight_layout()
-plt.savefig("results/imgs/extraction_time.png", dpi=300)
+plt.savefig(PLOTS_PATH + "extraction_time.png", dpi=300)
 
 
 # Number of candidates
 fig, ax = plt.subplots(figsize=(14 * cm, 6 * cm))
 sns.scatterplot(
-    pd.read_parquet("results/data/numcandidates.parquet.gzip"),
+    pd.read_parquet(RESULTS_DATA + "numcandidates.parquet.gzip"),
     x="numcandidates",
     y="Number of candidates",
     hue="extraction method",
@@ -52,13 +55,13 @@ ax.set_xlabel("Number of possible candidates")
 ax.set_ylabel("Number of candidates\n(log scale)")
 ax.legend(loc="lower center", fancybox=True, framealpha=0.9, ncol=2)
 fig.tight_layout()
-plt.savefig("results/imgs/clustering_fss_extraction.png", dpi=300)
+plt.savefig(PLOTS_PATH + "clustering_fss_extraction.png", dpi=300)
 
 
 # Distance evaluation
 fig, ax = plt.subplots(figsize=(14 * cm, 7 * cm))
 sns.scatterplot(
-    pd.read_parquet("results/data/distances.parquet.gzip"),
+    pd.read_parquet(RESULTS_DATA + "distances.parquet.gzip"),
     x="numcandidates",
     y="time",
     hue="extraction",
@@ -70,13 +73,13 @@ ax.set_ylabel("Distance evaluation\nTime (s)")
 ax.set_yscale("log")
 ax.set_xscale("log")
 fig.tight_layout()
-plt.savefig("results/imgs/distance_time.png", dpi=300)
+plt.savefig(PLOTS_PATH + "distance_time.png", dpi=300)
 
 
 # Accuracy plots
-accuracy_df = pd.read_parquet("results/data/accuracy.parquet.gzip")
+accuracy_df = pd.read_parquet(RESULTS_DATA + "accuracy.parquet.gzip")
 
-## FSS vs Clustering
+# FSS vs Clustering
 fig, ax = plt.subplots(figsize=(14 * cm, 6 * cm))
 sns.boxplot(
     accuracy_df[(accuracy_df.evaluation == "silhouette")],
@@ -91,9 +94,9 @@ sns.boxplot(
 ax.legend(loc="lower center", fancybox=True, framealpha=0.9, ncol=3)
 ax.set(ylim=(0.36, 1.01))
 fig.tight_layout()
-plt.savefig("results/imgs/extraction_comparison.png", dpi=300)
+plt.savefig(PLOTS_PATH + "extraction_comparison.png", dpi=300)
 
-## Evaluation methods
+# Evaluation methods
 fig, axs = plt.subplots(2, 1, figsize=(14 * cm, 8 * cm), sharex=True)
 ax = axs[0]
 sns.boxplot(
@@ -126,4 +129,4 @@ ax.legend(loc="lower right", fancybox=True, framealpha=0.9, ncol=3)
 ax.set(ylim=(0.36, 1.01))
 ax.set_ylabel("FSS")
 fig.tight_layout()
-plt.savefig("results/imgs/evaluation_comparison.png", dpi=300)
+plt.savefig(PLOTS_PATH + "evaluation_comparison.png", dpi=300)
