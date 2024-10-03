@@ -1,8 +1,10 @@
+UCRArchive_2018/
+imgs/
 *.log
-*.gzip
+#*.gzip
 *.txt
 *.in
-results/
+results/**/*.png
 *.png
 *.sql
 *.csv
@@ -11,7 +13,7 @@ results/
 
 *.ipynb
 .ipynb_checkpoints/
-data/
+./data/
 *.zip
 __pycache__
 ## Core latex/pdflatex auxiliary files:
