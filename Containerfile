@@ -10,6 +10,8 @@ RUN apt-get -y install curl unzip procps bzip2 wget vim fzf
 RUN mkdir /data
 RUN curl https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/UCRArchive_2018.zip\
   -o /data/data.zip && unzip -P someone /data/data.zip -d /data/
+RUN curl "https://www.cs.ucr.edu/~eamonn/time_series_data_2018/DataSummary.csv"\
+  -o /data/DataSummary.csv
 RUN mv /data/UCRArchive_2018/* /data/ && rmdir /data/UCRArchive_2018/
 
 # Install micromamba in /micromamba

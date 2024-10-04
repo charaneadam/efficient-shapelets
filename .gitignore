@@ -4,6 +4,7 @@ imgs/
 #*.gzip
 *.txt
 *.in
+resources/
 results/**/*.png
 *.png
 *.sql
