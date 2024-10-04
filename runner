@@ -1,1 +1,0 @@
-OMP_NUM_THREADS=8 python -m $(find src/ src/benchmarks src/paper_results -name "*.py" | fzf | cut -d . -f1 | tr / .)  
