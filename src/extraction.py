@@ -56,8 +56,6 @@ def run(cursor):
 
 
 if __name__ == "__main__":
-    import sys
-
     cursor = DB.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS extraction
@@ -79,11 +77,5 @@ if __name__ == "__main__":
                 end INT NOT NULL
             )
         """)
-    # run(cursor)
-    dataset_name = sys.argv[1]
-    method_name = sys.argv[2]
-    data = Data(dataset_name)
-    positions, time = extract(data, method_name)
-    print(f"Dataset {dataset_name} {data.X_train.shape}: {time}(s)")
-
-    # DB.commit()
+    run(cursor)
+    DB.commit()
