@@ -148,7 +148,7 @@ class Centroids:
                 windows_view = data_label_windows.reshape(n_total_windows, length)
                 windows_view = StandardScaler().fit_transform(windows_view.T).T
 
-                km = faiss.Kmeans(length, n_centroids)
+                km = faiss.Kmeans(length, n_centroids, niter=5)
                 km.train(windows_view)
                 dists, indices = km.index.search(windows_view, 1)
                 indices = indices.reshape(-1)
