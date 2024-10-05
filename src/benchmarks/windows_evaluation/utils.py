@@ -9,10 +9,9 @@ def distance_numba(ts: np.ndarray, shapelet: np.ndarray):
     n = ts.shape[0]
     length = shapelet.shape[0]
     min_dist = np.inf
-    shapelet = (shapelet - np.mean(shapelet)) / max(np.std(shapelet), EPS)
     for i in range(n - length + 1):
         distance = 0.0
-        x = ts[i : i + length]
+        x = ts[i: i + length]
         mu = np.mean(x)
         std = np.std(x)
         for j in range(length):
@@ -22,6 +21,18 @@ def distance_numba(ts: np.ndarray, shapelet: np.ndarray):
                 break
         min_dist = min(min_dist, distance)
     return np.sqrt(min_dist)
+
+
+@njit
+def candidate_distances(X, candidate, ts_id):
+    candidate = (candidate - np.mean(candidate)) / max(np.std(candidate), EPS)
+    m = len(X)
+    distances = np.zeros(m)
+    for idx in range(m):
+        if idx == ts_id:
+            continue
+        distances[idx] = distance_numba(X[idx], candidate)
+    return distances
 
 
 @njit(fastmath=True)
@@ -98,7 +109,8 @@ def info_gain(dists_to_ts, label, y, ts_idx=-1):
             cnt_other += 1
     p = cnt_same / n_ts
     gain_before_split = -p * np.log2(p) - (1 - p) * np.log2(1 - p)
-    dists_and_ts_indices = [(dist, idx) for idx, dist in enumerate(dists_to_ts)]
+    dists_and_ts_indices = [(dist, idx)
+                            for idx, dist in enumerate(dists_to_ts)]
     sorted_dists = sorted(dists_and_ts_indices)
     same = 0
     other = 0
