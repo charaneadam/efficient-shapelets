@@ -40,7 +40,7 @@ def run(cursor):
             n_candidates = positions.shape[0]
 
             cursor.execute(
-                """INSERT INTO extraction(dataset,method,n_candidates,time)
+                """INSERT INTO extractions(dataset,method,n_candidates,time)
                     VALUES(?,?,?,?)""",
                 (dataset_id, method_id, n_candidates, time)
             )
@@ -58,7 +58,7 @@ def run(cursor):
 if __name__ == "__main__":
     cursor = DB.cursor()
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS extraction
+        """CREATE TABLE IF NOT EXISTS extractions
             (
                 extraction_id INTEGER PRIMARY KEY,
                 dataset INT NOT NULL,
