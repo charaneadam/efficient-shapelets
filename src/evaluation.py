@@ -3,6 +3,32 @@ from src.config import DB
 from src.storage.data import Data
 
 
+def init_evaluations_database(cursor):
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS evaluations
+            (
+                evaluation_id INTEGER PRIMARY KEY,
+                candidate_id INTEGER NOT NULL,
+                fstat REAL NOT NULL,
+                silhouette REAL NOT NULL,
+                gain REAL NOT NULL,
+                distance_time REAL NOT NULL,
+                fstat_time REAL NOT NULL,
+                silhouette_time REAL NOT NULL,
+                gain_time REAL NOT NULL
+
+            )
+        """)
+
+
+def extractions_metadata(cursor):
+    query = """SELECT Name, extraction_id
+                FROM extractions
+                INNER JOIN ucr_info ON ID=dataset
+                ORDER BY n_candidates"""
+    return cursor.execute(query).fetchall()
+
+
 def data_and_candidate_info(extraction_metadata, cursor):
     dataset_name, extraction_id = extraction_metadata
     query = f"""SELECT candidate_id, ts, start, end
@@ -38,31 +64,9 @@ def evaluate_extraction(extraction_metadata, cursor):
     save_evaluations(evaluations, cursor)
 
 
-def extractions_metadata(cursor):
-    query = """SELECT Name, extraction_id
-                FROM extractions
-                INNER JOIN ucr_info ON ID=dataset
-                ORDER BY n_candidates"""
-    return cursor.execute(query).fetchall()
-
-
 if __name__ == "__main__":
     cursor = DB.cursor()
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS evaluations
-            (
-                evaluation_id INTEGER PRIMARY KEY,
-                candidate_id INTEGER NOT NULL,
-                fstat REAL NOT NULL,
-                silhouette REAL NOT NULL,
-                gain REAL NOT NULL,
-                distance_time REAL NOT NULL,
-                fstat_time REAL NOT NULL,
-                silhouette_time REAL NOT NULL,
-                gain_time REAL NOT NULL
-
-            )
-        """)
+    init_evaluations_database(cursor)
 
     for extraction in extractions_metadata(cursor):
         evaluate_extraction(extraction, cursor)
