@@ -1,4 +1,4 @@
-from src.utils import evaluate_candidate
+from src.computations import evaluate_candidate
 from src.config import DB
 from src.data import Data
 
