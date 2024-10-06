@@ -1,5 +1,6 @@
+from time import perf_counter
 import numpy as np
-from numba import njit
+from numba import njit, objmode
 
 EPS = 0.0000001
 
@@ -180,3 +181,64 @@ def info_gain_multiclass(dists_to_ts, y, ts_idx=-1):
         gain += ((n_ts - split_point) / n_ts) * entropy_right
         quality = max(quality, gain)
     return quality
+
+
+@njit
+def compute_silhouette(distances, y, ts_id):
+    with objmode(start="f8"):
+        start = perf_counter()
+    score = silhouette(distances, y, ts_id)
+    with objmode(end="f8"):
+        end = perf_counter()
+    return score, end-start
+
+
+@njit
+def compute_fstat(distances, y, ts_id):
+    with objmode(start="f8"):
+        start = perf_counter()
+    score = fstat(distances, y, ts_id)
+    with objmode(end="f8"):
+        end = perf_counter()
+    return score, end-start
+
+
+@njit
+def compute_gain(distances, y, ts_id):
+    with objmode(start="f8"):
+        start = perf_counter()
+    score = info_gain_multiclass(distances, y, ts_id)
+    with objmode(end="f8"):
+        end = perf_counter()
+    return score, end-start
+
+
+@njit
+def compute_distances(X, candidate, ts_id):
+    with objmode(start="f8"):
+        start = perf_counter()
+    distances = candidate_distances(X, candidate, ts_id)
+    with objmode(end="f8"):
+        end = perf_counter()
+    return distances, end-start
+
+
+@njit
+def evaluate_candidate(X, y, candidate_info):
+    candidate_id, ts_id, start, end = candidate_info
+    candidate = X[ts_id][start: end]
+
+    distances, distances_time = compute_distances(X, candidate, ts_id)
+    silhouette_score, silhouette_time = compute_silhouette(distances, y, ts_id)
+    fstat_score, fstat_time = compute_fstat(distances, y, ts_id)
+    gain_score, gain_time = compute_gain(distances, y, ts_id)
+    return (
+        candidate_id,
+        distances_time,
+        fstat_score,
+        silhouette_score,
+        gain_score,
+        fstat_time,
+        silhouette_time,
+        gain_time
+    )

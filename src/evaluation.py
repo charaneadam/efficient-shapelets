@@ -1,74 +1,68 @@
-from time import perf_counter
-import pandas as pd
-
-from src.storage.database import fix_engine, paper_engine
+from src.benchmarks.windows_evaluation.utils import evaluate_candidate
+from src.config import DB
 from src.storage.data import Data
-from src.benchmarks.windows_evaluation.utils import (
-    distance_numba,
-    silhouette,
-    fstat,
-    info_gain,
-    info_gain_multiclass,
-)
 
 
-def run_dataset(dataset_id, dataset_name):
+def data_and_candidate_info(extraction_metadata, cursor):
+    dataset_name, extraction_id = extraction_metadata
+    query = f"""SELECT candidate_id, ts, start, end
+                    FROM candidates
+                    WHERE extraction_id={extraction_id}"""
+    candidates_info = cursor.execute(query).fetchall()
     data = Data(dataset_name)
-    query = f"SELECT * FROM candidates WHERE dataset = {dataset_id}"
-    df = pd.read_sql(query, fix_engine).drop(columns=["dataset"])
+    return data, candidates_info
 
-    candidates = dict()
-    for label in df.label.unique():
-        candidates[label] = []
 
-    evals = []
-    for cand_id, _, ts_id, label, start, end in df.values:
-        candidate = data.X_train[ts_id][start:end]
-        dists = []
-        start = perf_counter()
-        for ts in data.X_train:
-            dists.append(distance_numba(ts, candidate))
-        end = perf_counter()
-        distance_computation_time = end - start
+def save_evaluations(evaluations, cursor):
+    query = """INSERT INTO evaluations
+                    (candidate_id,
+                        fstat, silhouette, gain,
+                        distance_time,
+                        fstat_time, silhouette_time, gain_time
+                    ) VALUES(?,?,?,?,?,?,?,?)"""
+    cursor.executemany(query, evaluations)
+    DB.commit()
 
-        start = perf_counter()
-        sil = silhouette(dists, label, data.y_train, ts_id)
-        fstt = fstat(dists, label, data.y_train, ts_id)
-        gain1 = info_gain(dists, label, data.y_train)
-        gain2 = info_gain_multiclass(dists, label, data.y_train)
-        end = perf_counter()
-        evaluation_time = end - start
 
-        evals.append(
-            [
-                cand_id,
-                distance_computation_time,
-                evaluation_time,
-                sil,
-                fstt,
-                gain1,
-                gain2,
-            ]
+def evaluate_extraction(extraction_metadata, cursor):
+    data, candidates_info = data_and_candidate_info(
+        extraction_metadata, cursor)
+    evaluations = [
+        evaluate_candidate(
+            data.X_train,
+            data.y_train,
+            candidate_info
         )
+        for candidate_info in candidates_info
+    ]
+    save_evaluations(evaluations, cursor)
 
-    pd.DataFrame(
-        evals,
-        columns=[
-            "candidate",
-            "distance time",
-            "evaluation time",
-            "silhouette",
-            "fstat",
-            "binary info",
-            "multiclass info",
-        ],
-    ).to_sql("evaluation", fix_engine, if_exists="append", index=False)
+
+def extractions_metadata(cursor):
+    query = """SELECT Name, extraction_id
+                FROM extractions
+                INNER JOIN ucr_info ON ID=dataset
+                ORDER BY n_candidates"""
+    return cursor.execute(query).fetchall()
 
 
 if __name__ == "__main__":
-    query = "SELECT dataset FROM candidates GROUP BY dataset ORDER BY COUNT(*)"
-    datasets = pd.read_sql(query, fix_engine).dataset.values
-    datasets_info = pd.read_sql("dataset", paper_engine)
-    for dataset_id in datasets[4:]:
-        dataset_name = datasets_info[datasets_info.id == dataset_id].name.values[0]
-        run_dataset(dataset_id, dataset_name)
+    cursor = DB.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS evaluations
+            (
+                evaluation_id INTEGER PRIMARY KEY,
+                candidate_id INTEGER NOT NULL,
+                fstat REAL NOT NULL,
+                silhouette REAL NOT NULL,
+                gain REAL NOT NULL,
+                distance_time REAL NOT NULL,
+                fstat_time REAL NOT NULL,
+                silhouette_time REAL NOT NULL,
+                gain_time REAL NOT NULL
+
+            )
+        """)
+
+    for extraction in extractions_metadata(cursor):
+        evaluate_extraction(extraction, cursor)
