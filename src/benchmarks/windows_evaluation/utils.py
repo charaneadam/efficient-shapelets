@@ -36,14 +36,14 @@ def candidate_distances(X, candidate, ts_id):
 
 
 @njit(fastmath=True)
-def silhouette(dists_to_ts, label, y, ts_idx=-1):
+def silhouette(dists_to_ts, y, ts_idx):
     a, b = 0.0, 0.0
     cnta, cntb = 0, 0
     n_ts = len(dists_to_ts)
     for ts_id in range(n_ts):
         if ts_id == ts_idx:
             continue
-        if y[ts_id] == label:
+        if y[ts_id] == y[ts_idx]:
             a += dists_to_ts[ts_id]
             cnta += 1
         else:
@@ -58,7 +58,7 @@ def silhouette(dists_to_ts, label, y, ts_idx=-1):
 
 
 @njit(fastmath=True)
-def fstat(dists_to_ts, label, y, ts_idx=-1):
+def fstat(dists_to_ts, y, ts_idx=-1):
     labels = {label: idx for idx, label in enumerate(np.sort(list(set(y))))}
     n_labels = len(labels)
     n_ts = len(dists_to_ts)
@@ -141,7 +141,7 @@ def info_gain(dists_to_ts, label, y, ts_idx=-1):
 
 
 @njit(fastmath=True)
-def info_gain_multiclass(dists_to_ts, lbl, y, ts_idx=-1):
+def info_gain_multiclass(dists_to_ts, y, ts_idx=-1):
     labels = np.unique(y)
     n_ts = len(dists_to_ts)
 
