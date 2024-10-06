@@ -234,10 +234,10 @@ def evaluate_candidate(X, y, candidate_info):
     gain_score, gain_time = compute_gain(distances, y, ts_id)
     return (
         candidate_id,
-        distances_time,
         fstat_score,
         silhouette_score,
         gain_score,
+        distances_time,
         fstat_time,
         silhouette_time,
         gain_time
