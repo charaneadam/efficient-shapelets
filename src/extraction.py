@@ -33,13 +33,9 @@ def init_extraction_database(cursor):
         """)
 
 
-def get_datasets_info():
-    query = """
-    SELECT Id, Name FROM 'resources/datasets_info.parquet'
-        WHERE Name in (SELECT * FROM read_csv('paper_datasets.csv', header=False))
-        ORDER BY Train*Length*Test;
-    """
-    return duckdb.sql(query).fetchall()
+def get_datasets_info(cursor):
+    query = """SELECT ID, Name FROM ucr_info ORDER BY Length*Train*Test;"""
+    return cursor.execute(query).fetchall()
 
 
 def extract(data, method_name):
@@ -85,7 +81,7 @@ def run(cursor):
 if __name__ == "__main__":
     cursor = DB.cursor()
     init_extraction_database(cursor)
-    for dataset_id, dataset_name in get_datasets_info()[:2]:
+    for dataset_id, dataset_name in get_datasets_info(cursor):
         data = Data(dataset_name)
         for method_name, method_id in METHODS_IDS.items():
             positions, time = extract(data, method_name)
