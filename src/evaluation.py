@@ -7,7 +7,6 @@ def init_evaluations_database(cursor):
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS evaluations
             (
-                evaluation_id INTEGER PRIMARY KEY,
                 candidate_id INTEGER NOT NULL,
                 fstat REAL NOT NULL,
                 silhouette REAL NOT NULL,
@@ -22,20 +21,27 @@ def init_evaluations_database(cursor):
 
 
 def extractions_metadata(cursor):
-    query = """SELECT Name, extraction_id
-                FROM extractions
-                INNER JOIN ucr_info ON ID=dataset
-                ORDER BY n_candidates"""
+    query = """SELECT DISTINCT extraction_id FROM candidates
+                WHERE candidate_id NOT IN (
+                    SELECT DISTINCT candidate_id FROM evaluations
+                );"""
     return cursor.execute(query).fetchall()
 
 
-def data_and_candidate_info(extraction_metadata, cursor):
-    dataset_name, extraction_id = extraction_metadata
+def data_by_extraction_id(extraction_id, cursor):
+    query = f"""SELECT Name from ucr_info
+                WHERE ID=(SELECT dataset FROM extractions
+                            WHERE extraction_id={extraction_id});"""
+    dataset_name = cursor.execute(query).fetchone()[0]
+    return Data(dataset_name)
+
+
+def data_and_candidate_info(extraction_id, cursor):
     query = f"""SELECT candidate_id, ts, start, end
                     FROM candidates
                     WHERE extraction_id={extraction_id}"""
     candidates_info = cursor.execute(query).fetchall()
-    data = Data(dataset_name)
+    data = data_by_extraction_id(extraction_id, cursor)
     return data, candidates_info
 
 
@@ -50,9 +56,8 @@ def save_evaluations(evaluations, cursor):
     DB.commit()
 
 
-def evaluate_extraction(extraction_metadata, cursor):
-    data, candidates_info = data_and_candidate_info(
-        extraction_metadata, cursor)
+def evaluate_extraction(extraction_id, cursor):
+    data, candidates_info = data_and_candidate_info(extraction_id, cursor)
     evaluations = [
         evaluate_candidate(
             data.X_train,
@@ -68,4 +73,4 @@ if __name__ == "__main__":
     cursor = DB.cursor()
     init_evaluations_database(cursor)
     for extraction in extractions_metadata(cursor):
-        evaluate_extraction(extraction, cursor)
+        evaluate_extraction(extraction[0], cursor)

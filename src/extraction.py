@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from time import perf_counter
-import duckdb
 from src.data import Data
 from src.extraction_methods import Centroids, FSS
 from src.config import DB
@@ -34,7 +33,9 @@ def init_extraction_database(cursor):
 
 
 def get_datasets_info(cursor):
-    query = """SELECT ID, Name FROM ucr_info ORDER BY Length*Train*Test;"""
+    query = """SELECT ID, Name FROM ucr_info
+                WHERE ID NOT IN (SELECT DISTINCT dataset FROM extractions)
+                ORDER BY Length*Train*Test;"""
     return cursor.execute(query).fetchall()
 
 
