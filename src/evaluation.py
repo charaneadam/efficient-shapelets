@@ -1,6 +1,6 @@
-from src.benchmarks.windows_evaluation.utils import evaluate_candidate
+from src.utils import evaluate_candidate
 from src.config import DB
-from src.storage.data import Data
+from src.data import Data
 
 
 def init_evaluations_database(cursor):
@@ -67,6 +67,5 @@ def evaluate_extraction(extraction_metadata, cursor):
 if __name__ == "__main__":
     cursor = DB.cursor()
     init_evaluations_database(cursor)
-
     for extraction in extractions_metadata(cursor):
         evaluate_extraction(extraction, cursor)

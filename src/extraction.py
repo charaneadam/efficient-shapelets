@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from time import perf_counter
 import duckdb
-from src.storage.data import Data
+from src.data import Data
 from src.extraction_methods import Centroids, FSS
 from src.config import DB
 
@@ -85,7 +85,7 @@ def run(cursor):
 if __name__ == "__main__":
     cursor = DB.cursor()
     init_extraction_database(cursor)
-    for dataset_id, dataset_name in get_datasets_info():
+    for dataset_id, dataset_name in get_datasets_info()[:2]:
         data = Data(dataset_name)
         for method_name, method_id in METHODS_IDS.items():
             positions, time = extract(data, method_name)

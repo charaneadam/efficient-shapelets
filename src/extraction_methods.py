@@ -4,8 +4,8 @@ from sklearn.preprocessing import StandardScaler
 import faiss
 
 from src.exceptions import NormalizationFailure
-from src.storage.data import Data
-from src.methods.fss import FastShapeletCandidates
+from src.data import Data
+from src.fss import FastShapeletCandidates
 
 
 def normalize(candidate):
@@ -13,86 +13,6 @@ def normalize(candidate):
         return (candidate - np.mean(candidate)) / np.std(candidate)
     except:
         raise NormalizationFailure
-
-
-class FixedLength:
-    def __init__(self, data: Data, window_length) -> None:
-        self.data: Data = data
-        self.length: int = int(data.ts_length * window_length)
-        self._n_cands_per_class: int = max(300, int(0.2 * self.data.ts_length))
-
-        self.__fail: int = 0
-        self.candidates = dict()
-        self.candidates_positions = dict()
-
-    def _sample_subsequence_positions(self):
-        start_pos = np.random.randint(self.data.ts_length - self.length + 1)
-        end_pos = start_pos + self.length
-        return start_pos, end_pos
-
-    def _sample_candidate(self, label, ts_ids):
-        try:
-            start, end = self._sample_subsequence_positions()
-            ts_id = np.random.choice(ts_ids)
-            candidate = self.data.X_train[ts_id][start:end]
-            candidate = normalize(candidate)
-            self.candidates[label].append(candidate)
-            self.candidates_positions[label].append([ts_id, start, end])
-            return 1
-        except NormalizationFailure:
-            self.__fail += 1
-            return 0
-
-    def generate_candidates(self):
-        for label in self.data.labels:
-            self.candidates[label] = []
-            self.candidates_positions[label] = []
-            ts_ids = np.where(self.data.y_train == label)[0]
-            self.__fail = 0
-            n_extracted = 0
-            while n_extracted < self._n_cands_per_class and self.__fail < 10:
-                n_extracted += self._sample_candidate(label, ts_ids)
-
-
-class VariableLength:
-    def __init__(self, data) -> None:
-        self.data: Data = data
-        self._n_cands_per_class: int = max(300, int(0.2 * self.data.ts_length))
-
-        self.__fail: int = 0
-        self.candidates = dict()
-        self.candidates_positions = dict()
-
-    def _sample_subsequence_positions(self):
-        ts_length = self.data.ts_length
-        start_pos = np.random.randint(int(0.9 * ts_length))
-        length = np.random.randint(int(0.05 * ts_length), int(0.7 * ts_length))
-        length = max(length, 3)
-        end_pos = min(ts_length, start_pos + length)
-        return start_pos, end_pos
-
-    def _sample_candidate(self, label, ts_ids):
-        try:
-            start, end = self._sample_subsequence_positions()
-            ts_id = np.random.choice(ts_ids)
-            candidate = self.data.X_train[ts_id][start:end]
-            candidate = normalize(candidate)
-            self.candidates[label].append(candidate)
-            self.candidates_positions[label].append([ts_id, start, end])
-            return 1
-        except NormalizationFailure:
-            self.__fail += 1
-            return 0
-
-    def generate_candidates(self):
-        for label in self.data.labels:
-            self.candidates[label] = []
-            self.candidates_positions[label] = []
-            ts_ids = np.where(self.data.y_train == label)[0]
-            self.__fail = 0
-            n_extracted = 0
-            while n_extracted < self._n_cands_per_class and self.__fail < 10:
-                n_extracted += self._sample_candidate(label, ts_ids)
 
 
 class FSS:
@@ -145,7 +65,8 @@ class Centroids:
 
                 n_total_windows = n_ts * n_windows_per_ts
                 n_centroids = int(np.sqrt(n_total_windows))
-                windows_view = data_label_windows.reshape(n_total_windows, length)
+                windows_view = data_label_windows.reshape(
+                    n_total_windows, length)
                 windows_view = StandardScaler().fit_transform(windows_view.T).T
 
                 km = faiss.Kmeans(length, n_centroids, niter=5)
@@ -166,7 +87,8 @@ class Centroids:
                     # assert label == self.data.y_train[ts_id]
                     start = index_window_minimal_distance % n_windows_per_ts
                     end = start + length
-                    self.candidates_positions[label].append([ts_id, start, end])
+                    self.candidates_positions[label].append(
+                        [ts_id, start, end])
                     self.candidates[label].append(
                         windows_view[index_window_minimal_distance]
                     )

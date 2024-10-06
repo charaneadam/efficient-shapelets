@@ -8,7 +8,7 @@ from scipy.spatial.distance import cdist
 import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
-from src.exceptions import TransformationFailrue, NormalizationFailure
+from src.exceptions import TransformationFailrue
 
 random.seed(datetime.now())
 
