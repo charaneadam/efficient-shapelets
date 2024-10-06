@@ -1,5 +1,7 @@
+import sqlite3
+from multiprocessing import Pool
 from src.computations import evaluate_candidate
-from src.config import DB
+from src.config import DB, NUM_THREADS
 from src.data import Data
 
 
@@ -20,7 +22,7 @@ def init_evaluations_database(cursor):
         """)
 
 
-def extractions_metadata(cursor):
+def extractions_not_evaluated(cursor):
     query = """SELECT DISTINCT extraction_id FROM candidates
                 WHERE candidate_id NOT IN (
                     SELECT DISTINCT candidate_id FROM evaluations
@@ -56,7 +58,9 @@ def save_evaluations(evaluations, cursor):
     DB.commit()
 
 
-def evaluate_extraction(extraction_id, cursor):
+def evaluate_extraction(extraction_id):
+    db = sqlite3.connect("resources/results.db")
+    cursor = db.cursor()
     data, candidates_info = data_and_candidate_info(extraction_id, cursor)
     evaluations = [
         evaluate_candidate(
@@ -67,10 +71,13 @@ def evaluate_extraction(extraction_id, cursor):
         for candidate_info in candidates_info
     ]
     save_evaluations(evaluations, cursor)
+    db.commit()
 
 
 if __name__ == "__main__":
     cursor = DB.cursor()
     init_evaluations_database(cursor)
-    for extraction in extractions_metadata(cursor):
-        evaluate_extraction(extraction[0], cursor)
+    inputs = [extraction[0]
+              for extraction in extractions_not_evaluated(cursor)]
+    with Pool(NUM_THREADS) as p:
+        p.map(evaluate_extraction, inputs)
