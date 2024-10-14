@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-RESULTS_DATA = "results/data/"
-RESULTS_PATH = "results/"
+RESULTS_PATH= "./"
+RESULTS_DATA = RESULTS_PATH + "data/"
 PLOTS_PATH = RESULTS_PATH + "imgs/"
 
 if not os.path.isdir(PLOTS_PATH):
